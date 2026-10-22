@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0d10">
+<script>
+/* Jour/nuit automatique selon le lever et le coucher du soleil à Paris (48,85 N ; 2,35 E) */
+window.parisTheme=function(d){d=d||new Date();var r=Math.PI/180,y0=Date.UTC(d.getUTCFullYear(),0,0),n=Math.floor((d-y0)/864e5),g=2*Math.PI/365*(n-1+(d.getUTCHours()-12)/24),
+eq=229.18*(0.000075+0.001868*Math.cos(g)-0.032077*Math.sin(g)-0.014615*Math.cos(2*g)-0.040849*Math.sin(2*g)),
+de=0.006918-0.399912*Math.cos(g)+0.070257*Math.sin(g)-0.006758*Math.cos(2*g)+0.000907*Math.sin(2*g)-0.002697*Math.cos(3*g)+0.00148*Math.sin(3*g),
+la=48.85*r,c=(Math.cos(90.833*r)/(Math.cos(la)*Math.cos(de)))-Math.tan(la)*Math.tan(de);c=Math.max(-1,Math.min(1,c));
+var ha=Math.acos(c)/r,noon=720-4*2.35-eq,rise=noon-4*ha,set=noon+4*ha,m=d.getUTCHours()*60+d.getUTCMinutes();return(m>=rise&&m<set)?'light':'dark'};
+try{var th=null;try{th=sessionStorage.getItem('theme')}catch(e){}document.documentElement.dataset.theme=th||window.parisTheme()}catch(e){document.documentElement.dataset.theme="dark"}</script>
+<title>Grande Boucle Alpine à vélo · 19 jours depuis Lyon</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{color-scheme:dark;--bg:#12151b;--card:#1b2029;--line:#2c3441;--tx:#eef1f5;--mut:#9fa9b8;--ac:#ffc2a3;--ac2:#9be6cb;--top:#0f1217;--chip:#262d39;--chip2:#232a35;--lc:#f2d28f;--cc:#a9d6f5;--nc:#ffb9a6;--shadow:#0009;--pk:#fbd3e0;--pe:#ffd9c7;--mi:#cdeee2;--la:#dcd6f7;--sk:#cfe6fb;--bu:#fdeebb;--ink:#2b2f3a}
+:root[data-theme=light]{color-scheme:light;--bg:#f6f3ee;--card:#ffffff;--line:#e4dfd7;--tx:#242a33;--mut:#667180;--ac:#f4b79a;--ac2:#8fd6bb;--top:#ffffff;--chip:#eef0f3;--chip2:#f4f6f8;--lc:#8a5a00;--cc:#1b5f93;--nc:#a03a20;--shadow:#0003}
+*{box-sizing:border-box}html,body{margin:0;height:100%}html{font-size:18px;-webkit-text-size-adjust:100%}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--tx);line-height:1.5;transition:background .25s,color .25s}
+button,select{font:inherit}button{-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:3px solid #7aa7ff;outline-offset:2px}
+.top{position:sticky;top:0;z-index:1000;background:var(--top);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;padding:10px 14px;padding-top:max(10px,env(safe-area-inset-top))}
+.brand{font-weight:800;font-size:1.05rem;margin-left:4px}.brand span{color:var(--ac)}
+.dd{position:relative}
+#ddbtn{display:flex;align-items:center;gap:10px;min-height:46px;background:var(--pe);color:var(--ink);border:0;border-radius:14px;padding:8px 14px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px var(--shadow)}
+#ddbtn .chev{transition:transform .2s}#ddbtn[aria-expanded=true] .chev{transform:rotate(180deg)}
+#ddlist{position:absolute;left:0;top:calc(100% + 8px);min-width:290px;margin:0;padding:8px;list-style:none;background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 14px 40px var(--shadow);z-index:2000}
+#ddlist[hidden]{display:none}
+#ddlist button{display:flex;align-items:center;gap:12px;width:100%;min-height:50px;background:transparent;border:0;border-radius:12px;padding:8px 12px;color:var(--tx);font-weight:600;cursor:pointer;text-align:left}
+#ddlist button:hover,#ddlist button[aria-selected=true]{background:var(--chip)}
+#ddlist .ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-size:1.2rem;color:var(--ink)}
+#ddlist hr{border:0;border-top:1px solid var(--line);margin:6px 4px}
+#back{background:var(--chip);color:var(--tx);border:0;border-radius:14px;min-height:46px;padding:8px 14px;font-weight:700;cursor:pointer}
+#back[hidden]{display:none}
+#theme{margin-left:auto;min-height:46px;min-width:46px;background:var(--chip);color:var(--tx);border:0;border-radius:14px;padding:8px 12px;cursor:pointer;font-weight:700}
+.wrap{max-width:980px;margin:0 auto;padding:22px 16px 110px}
+.wrap h2{font-size:1.6rem;margin:.2em 0 .4em}.lead{font-size:1.1rem;color:var(--mut)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin:22px 0}
+.tile{border:0;border-radius:20px;padding:22px 18px;color:var(--ink);cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:6px;transition:.15s;box-shadow:0 4px 14px var(--shadow)}
+.tile:hover{transform:translateY(-2px)}.tile .i{font-size:2.4rem}.tile b{font-size:1.25rem}.tile small{font-size:.95rem;opacity:.8}
+.t1{background:var(--sk)}.t2{background:var(--pk)}.t3{background:var(--bu)}.t4{background:var(--mi)}
+.soc{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0}
+.sbtn{border:0;border-radius:14px;min-height:48px;padding:12px 18px;font-weight:700;font-size:1rem;color:var(--ink);cursor:pointer}
+.sbtn.ig{background:var(--pk)}.sbtn.tt{background:var(--la)}.sbtn.st{background:var(--pe)}
+.btn{background:var(--pe);color:var(--ink);border:0;border-radius:12px;min-height:44px;padding:10px 14px;font-weight:700;cursor:pointer}
+.donbtn{background:var(--bu);color:var(--ink);border:0;border-radius:99px;min-height:46px;padding:10px 20px;font-weight:700;font-size:1rem;cursor:pointer;box-shadow:0 2px 8px var(--shadow)}
+.fab{position:fixed;right:14px;bottom:max(14px,env(safe-area-inset-bottom));z-index:1500;font-size:.92rem;padding:10px 16px;opacity:.96}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin:14px 0}
+.panel h3{margin:.1em 0 .4em}
+.shopgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.prod{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;text-align:center}
+.prod .i{font-size:3rem}.pill{display:inline-block;background:var(--chip);border-radius:99px;padding:2px 10px;font-size:.8rem;color:var(--mut)}
+.modal{position:fixed;inset:0;background:#0009;z-index:3000;display:grid;place-items:center;padding:14px}
+.modal[hidden]{display:none}
+.box{background:var(--card);border:1px solid var(--line);border-radius:22px;max-width:520px;width:100%;padding:22px;max-height:92vh;overflow:auto}
+.box .big{display:block;width:100%;margin:10px 0;padding:16px 18px;border-radius:16px;border:0;color:var(--ink);font-size:1.05rem;font-weight:700;cursor:pointer;text-align:left}
+.box .big small{display:block;font-weight:400;opacity:.8}
+#watch{background:var(--mi)}#pay{background:var(--sk)}#adok{background:var(--mi)}
+.amts{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}.amts button{flex:1;min-width:70px;min-height:50px;border-radius:14px;border:0;background:var(--bu);color:var(--ink);font-weight:800;font-size:1.1rem;cursor:pointer}
+.ad{background:var(--chip2);border:2px dashed var(--line);border-radius:14px;min-height:150px;display:grid;place-items:center;text-align:center;color:var(--mut);padding:12px}
+.link{background:none;border:0;color:var(--cc);text-decoration:underline;cursor:pointer;font-size:1rem;padding:10px 0;min-height:44px}
+#toast{position:fixed;left:50%;bottom:76px;transform:translate(-50%,20px);background:var(--tx);color:var(--bg);padding:14px 20px;border-radius:14px;font-weight:700;opacity:0;pointer-events:none;transition:.25s;z-index:4000;max-width:90vw;text-align:center}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+.tip{color:var(--mut);font-size:.95rem}.view[hidden]{display:none}
+.routebar{padding:10px 16px;border-bottom:1px solid var(--line)}
+.stats{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 12px}
+.stat b{display:block;font-size:1.1rem;color:var(--ac2)}.stat small{color:var(--mut)}
+main{display:grid;grid-template-columns:420px 1fr;height:calc(100vh - 150px);min-height:560px}
+#list{overflow:auto;padding:12px;border-right:1px solid var(--line)}
+#map{height:100%;background:#111}
+.day{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--c,var(--ac));border-radius:14px;padding:12px 14px;margin-bottom:10px;cursor:pointer;transition:.15s}
+.day:hover,.day.on{border-color:var(--ac);transform:translateX(2px)}
+.day h3{margin:0;font-size:1rem;display:flex;justify-content:space-between;gap:8px}
+.day h3 em{font-style:normal;color:var(--mut);font-weight:400;font-size:.8rem;text-align:right}
+.meta{display:flex;gap:6px;flex-wrap:wrap;margin:7px 0}
+.tag{font-size:.75rem;padding:2px 9px;border-radius:99px;background:var(--chip)}
+.hard{background:#ffd3cc;color:#7a2a1a}.rest{background:#cdeee2;color:#1d5a49}
+.day p{margin:0 0 6px;color:var(--mut);font-size:.88rem;line-height:1.45}
+.day p.l{color:var(--lc)}.day p.c{color:var(--cc)}.day p.n{color:var(--nc);font-size:.8rem}
+.num{width:28px;height:28px;border-radius:50%;background:var(--pe);color:var(--ink);font:700 12px system-ui;display:grid;place-items:center;border:2px solid #fff;box-shadow:0 2px 8px #0009}
+.num.r{background:var(--mi)}.num.s{background:#fff;color:#000}
+.em{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-size:15px;border:2px solid #fff;box-shadow:0 2px 6px #0009}
+.em.l{background:var(--bu)}.em.c{background:var(--sk)}.em.q{background:#d4d8de}
+.leaflet-popup-content-wrapper{background:var(--card);color:var(--tx)}.leaflet-popup-tip{background:var(--card)}
+footer{padding:12px 16px;color:var(--mut);font-size:.78rem;line-height:1.5}
+@media(max-width:850px){
+ html{font-size:17px}
+ main{grid-template-columns:1fr;grid-template-rows:52vh auto;height:auto;min-height:0}
+ #map{order:-1;height:52vh}#list{border:0;overflow:visible}
+ .brand{display:none}.top{gap:8px;padding-left:10px;padding-right:10px}
+ #ddlist{position:fixed;left:10px;right:10px;top:68px;min-width:0}
+ #theme .tl{display:none}
+ .tiles{grid-template-columns:1fr}.wrap{padding-bottom:96px}
+ .fab{font-size:.85rem;padding:9px 14px}
+ .box{padding:18px;border-radius:20px}
+}
+
+/* ===== DA cycliste : bitume, craie, jaune maillot ===== */
+:root{--bg:#0e1013;--card:#171a1f;--line:#272c33;--tx:#f0eee8;--mut:#98a0aa;--top:#0b0d10;--chip:#21262d;--chip2:#1b1f25;--yel:#f2c230;--ink:#14161a;--ac:#f2c230;--ac2:#7fd1b3;--pe:var(--yel);--bu:var(--yel);--sk:#9cc3e0;--mi:#86cdb0;--pk:var(--chip);--la:var(--chip);--m1:#1d2530;--m2:#161d27;--m3:#10151c;--sky1:#1b2a3a;--sky2:#0e1013;--sun:#f2c230}
+:root[data-theme=light]{--bg:#f3f1eb;--card:#fff;--line:#dedad0;--tx:#1a1d22;--mut:#5f6772;--top:#fff;--chip:#ebe8e0;--chip2:#f3f1eb;--yel:#e8b400;--ink:#14161a;--ac:#b98400;--ac2:#2b8a6c;--m1:#b8c4cf;--m2:#95a5b4;--m3:#6f8294;--sky1:#dfe9f1;--sky2:#f3f1eb;--sun:#e8b400}
+body{font-family:"Barlow","Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+.brand{text-transform:uppercase;letter-spacing:.12em;font-weight:800;font-size:.85rem}.brand span{color:var(--yel)}
+#ddbtn{background:var(--yel);color:var(--ink);border-radius:10px;text-transform:uppercase;letter-spacing:.05em;font-size:.9rem}
+#ddlist{border-radius:14px}#ddlist .ic{background:var(--chip);border-radius:8px}
+#back,#theme{border-radius:10px;border:1px solid var(--line);background:transparent}
+.btn,.donbtn{background:var(--yel);color:var(--ink);border-radius:10px;letter-spacing:.02em}
+.donbtn{border-radius:10px}.fab{border-radius:10px}
+.sbtn{background:transparent!important;color:var(--tx);border:1.5px solid var(--line);border-radius:10px;text-transform:uppercase;letter-spacing:.08em;font-size:.85rem}
+.sbtn:hover{border-color:var(--yel);color:var(--yel)}
+.box .big{background:var(--chip);color:var(--tx);border-radius:12px}#watch{background:var(--yel);color:var(--ink)}#adok{background:var(--yel);color:var(--ink)}#pay{background:var(--chip);color:var(--tx)}
+.amts button{background:var(--chip);color:var(--tx);border:1.5px solid var(--line);border-radius:10px}.amts button:hover{border-color:var(--yel)}
+.panel,.prod,.box{border-radius:14px}
+.wrap h2{text-transform:uppercase;letter-spacing:.06em;font-size:1.5rem;border-left:5px solid var(--yel);padding-left:12px}
+.num{background:var(--yel)}
+/* hero */
+.hero{position:relative;overflow:hidden;background:linear-gradient(var(--sky1),var(--sky2));min-height:420px;display:flex;flex-direction:column;justify-content:flex-end}
+.hero svg.land{position:absolute;inset:0;width:100%;height:100%}
+.hero .in{position:relative;max-width:980px;margin:0 auto;width:100%;padding:56px 18px 96px}
+.kick{display:inline-block;font-weight:700;letter-spacing:.2em;text-transform:uppercase;font-size:.78rem;color:var(--ac);margin-bottom:8px}
+.hero h1{margin:0;font-size:clamp(2.4rem,9vw,4.6rem);line-height:.95;text-transform:uppercase;font-weight:900;letter-spacing:-.01em}
+.hero h1 span{color:var(--ac)}
+.hero p{max-width:34rem;font-size:1.05rem;color:var(--tx);opacity:.85;margin:14px 0 0}
+.road{position:absolute;left:0;right:0;bottom:0;height:42px;background:#1a1c20;border-top:3px solid #2a2d33}
+.road i{position:absolute;top:19px;left:0;right:0;height:4px;background:repeating-linear-gradient(90deg,#f0eee8 0 34px,transparent 34px 70px);animation:dash 1.6s linear infinite;opacity:.8}
+@keyframes dash{to{background-position:-70px 0}}
+.rider{position:absolute;bottom:26px;left:0;width:92px;color:var(--yel);animation:ride 14s linear infinite}
+@keyframes ride{from{transform:translateX(-110px)}to{transform:translateX(100vw)}}
+.spin{transform-box:fill-box;transform-origin:center;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.stats4{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--line);background:var(--card)}
+.stats4 div{padding:16px 12px;text-align:center;border-right:1px solid var(--line)}.stats4 div:last-child{border-right:0}
+.stats4 b{display:block;font-size:1.6rem;font-weight:900;line-height:1}.stats4 small{color:var(--mut);text-transform:uppercase;letter-spacing:.12em;font-size:.7rem}
+.rows{max-width:980px;margin:0 auto;padding:26px 16px 0}
+.row{display:grid;grid-template-columns:54px 1fr auto;align-items:center;gap:6px;width:100%;background:transparent;border:0;border-bottom:1px solid var(--line);color:var(--tx);padding:20px 4px;cursor:pointer;text-align:left;transition:.2s;position:relative}
+.row:first-child{border-top:1px solid var(--line)}
+.row .n{font-weight:900;font-size:1.1rem;color:var(--ac);letter-spacing:.05em}
+.row b{display:block;font-size:1.35rem;text-transform:uppercase;letter-spacing:.04em}
+.row small{color:var(--mut);font-size:.95rem}
+.row .ar{font-size:1.6rem;transition:.2s;color:var(--mut)}
+.row:hover,.row:focus-visible{padding-left:14px;background:var(--chip2)}.row:hover .ar{transform:translateX(6px);color:var(--yel)}
+.socrow{max-width:980px;margin:0 auto;padding:22px 16px 0;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.socrow span{color:var(--mut);text-transform:uppercase;letter-spacing:.15em;font-size:.75rem;margin-right:6px}
+/* transition vélo */
+#wipe{position:fixed;inset:0;z-index:5000;background:var(--top);transform:translateX(-101%);pointer-events:none;display:flex;align-items:flex-end;overflow:hidden}
+#wipe.in{transform:translateX(0);transition:transform .32s cubic-bezier(.7,0,.3,1)}
+#wipe.out{transform:translateX(101%);transition:transform .38s cubic-bezier(.7,0,.3,1)}
+#wipe svg.m{position:absolute;left:0;bottom:0;width:100%;height:55%}
+#wipe .rd{position:absolute;left:0;right:0;bottom:0;height:42px;background:#1a1c20;border-top:3px solid #2a2d33}
+#wipe .rd i{position:absolute;top:19px;left:0;right:0;height:4px;background:repeating-linear-gradient(90deg,#f0eee8 0 34px,transparent 34px 70px);animation:dash .5s linear infinite}
+#wipe .rider{animation:none;left:auto;right:14%;bottom:26px;width:120px}
+@media(prefers-reduced-motion:reduce){#wipe{display:none}.rider,.road i,.spin{animation:none}}
+/* boutique */
+.sec{margin:26px 0 8px;text-transform:uppercase;letter-spacing:.14em;font-size:.8rem;color:var(--ac);font-weight:800}
+.prod{text-align:left;display:flex;flex-direction:column;gap:6px}.prod .ph{height:92px;border-radius:10px;background:repeating-linear-gradient(135deg,var(--chip) 0 10px,var(--chip2) 10px 20px);display:grid;place-items:center;font-size:2.2rem}
+.prod b{font-size:1.05rem}.prod small{color:var(--mut)}
+.tomb{background:linear-gradient(135deg,var(--card),var(--chip2));border:2px solid var(--yel);border-radius:14px;padding:20px;margin:16px 0;position:relative;overflow:hidden}
+.tomb h3{margin:0 0 4px;text-transform:uppercase;letter-spacing:.06em;font-size:1.3rem}
+.tomb .tk{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 6px}
+.tomb .tk button{flex:1;min-width:110px;min-height:58px;border-radius:10px;border:1.5px solid var(--line);background:var(--chip);color:var(--tx);font-weight:800;cursor:pointer;line-height:1.2}
+.tomb .tk button small{display:block;font-weight:500;color:var(--mut)}.tomb .tk button:hover{border-color:var(--yel)}
+.tomb .tk button.main{background:var(--yel);color:var(--ink);border-color:var(--yel)}.tomb .tk button.main small{color:var(--ink);opacity:.7}
+@media(max-width:850px){.shopgrid{grid-template-columns:repeat(2,1fr);gap:10px}.prod{padding:10px}.prod .ph{height:64px;font-size:1.7rem}.prod b{font-size:.95rem}.hero{min-height:380px}.hero .in{padding:40px 16px 90px}.stats4 b{font-size:1.25rem}.stats4 small{font-size:.62rem;letter-spacing:.06em}.row{grid-template-columns:42px 1fr auto}.row b{font-size:1.15rem}#wipe .rider{width:90px}}
+
+/* ===== v4 : couleurs, coureurs, transitions ===== */
+:root{--c1:#f2c230;--c2:#ff6b4a;--c3:#2fbf8f;--c4:#4aa3e8;--sky1:#0d1b36;--sky2:#2a3b66;--sky3:#c9663f;--m1:#4a5f8c;--m2:#32456b;--m3:#1f3d38}
+:root[data-theme=light]{--c1:#f0b400;--c2:#f05a38;--c3:#1fa77a;--c4:#2b8bd8;--sky1:#7fbdee;--sky2:#c9e4f6;--sky3:#fde2b0;--m1:#8ea8c7;--m2:#6b88ab;--m3:#4d8466}
+.hero{background:linear-gradient(var(--sky1),var(--sky2) 55%,var(--sky3))}
+.stats4 b{color:var(--c)}.stats4 div{border-top:4px solid var(--c)}
+.rows{display:grid;gap:12px;padding-top:24px}
+.row{grid-template-columns:68px 1fr auto;gap:14px;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:12px 18px 12px 12px;min-height:92px;border-top:1.5px solid var(--line)!important}
+.row:first-child{border-top:1.5px solid var(--line)}
+.row .ic{width:68px;height:68px;border-radius:14px;background:var(--c);display:grid;place-items:center;font-size:2rem;box-shadow:0 4px 12px #0004}
+.row .tx b{font-size:1.25rem}.row .ar{color:var(--c);font-weight:900}
+.row:hover,.row:focus-visible{padding-left:12px;transform:translateY(-2px);border-color:var(--c);background:var(--card)}
+.row:active{transform:scale(.99)}
+#ddlist .ic{color:var(--ink)}
+.pair{position:absolute;bottom:18px;left:0;display:flex;align-items:flex-end;gap:4px;animation:ride 14s linear infinite}
+.rider{position:static;width:auto;animation:none;color:inherit}
+.rider svg{width:150px;height:100px;display:block;overflow:visible}.rider.sm svg{width:134px;height:89px}
+.bob{animation:bob .55s ease-in-out infinite}@keyframes bob{50%{transform:translateY(-1.5px)}}
+.pose{opacity:0;animation:pose .56s steps(1) infinite}
+@keyframes pose{0%{opacity:1}25%,100%{opacity:0}}
+.road{height:40px}
+.rider.a{margin-left:-6px}
+@keyframes ride{from{transform:translateX(-300px)}to{transform:translateX(100vw)}}
+/* transitions variées */
+#wipe{display:block;visibility:hidden;transform:none;clip-path:none;overflow:hidden}
+#wipe.in,#wipe.out{visibility:visible}
+#wipe[data-v=r]{transform:translateX(-101%)}#wipe[data-v=l]{transform:translateX(101%)}
+#wipe[data-v=u]{transform:translateY(101%)}#wipe[data-v=d]{transform:translateY(-101%)}
+#wipe[data-v=k]{transform:translateX(-135%) skewX(-16deg)}
+#wipe[data-v=i]{clip-path:circle(0% at 50% 62%)}
+#wipe.in{transition:transform .32s cubic-bezier(.7,0,.3,1),clip-path .32s ease-in}
+#wipe.out{transition:transform .38s cubic-bezier(.7,0,.3,1),clip-path .38s ease-out}
+#wipe.in[data-v]{transform:none}#wipe.in[data-v=k]{transform:skewX(-16deg)}#wipe.in[data-v=i]{clip-path:circle(150% at 50% 62%)}
+#wipe.out[data-v=r]{transform:translateX(101%)}#wipe.out[data-v=l]{transform:translateX(-101%)}
+#wipe.out[data-v=u]{transform:translateY(-101%)}#wipe.out[data-v=d]{transform:translateY(101%)}
+#wipe.out[data-v=k]{transform:translateX(135%) skewX(-16deg)}#wipe.out[data-v=i]{clip-path:circle(0% at 50% 62%);transform:none}
+#wipe .rd{height:40px}
+#wipe .pair.wp{bottom:14px}
+#wipe.in .pair.wp,#wipe.out .pair.wp{animation:wr .75s linear}
+#wipe[data-v=l] .pair.wp{animation-name:wl!important}
+#wipe[data-v=l] .pair.wp .rider{transform:scaleX(-1)}
+@keyframes wr{from{transform:translateX(-300px)}to{transform:translateX(100vw)}}
+@keyframes wl{from{transform:translateX(100vw)}to{transform:translateX(-300px)}}
+#wipe .wheel{position:absolute;left:50%;top:38%;width:min(34vw,220px);transform:translate(-50%,-50%);opacity:.9}
+#wipe .wheel .spin{animation-duration:.5s}
+/* tombola */
+.tomb .tk{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.tomb .tk button{position:relative;min-height:66px}.tomb .tk button em{position:absolute;top:-9px;right:10px;background:var(--c2);color:#fff;border-radius:99px;font-size:.68rem;font-style:normal;padding:2px 9px;text-transform:uppercase;letter-spacing:.06em}
+@media(min-width:700px){.tomb .tk{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:850px){.rider svg{width:112px;height:75px}.rider.sm svg{width:100px;height:67px}.row{min-height:88px}.row .ic{width:60px;height:60px;font-size:1.8rem}.row{grid-template-columns:60px 1fr auto}}
+@media(prefers-reduced-motion:reduce){.pair,.bob,.pose{animation:none}.pose.p0{opacity:1}}
+
+#tbar{display:flex;align-items:center;gap:12px;width:100%;border:0;background:var(--yel);color:var(--ink);padding:10px 16px;font-size:.95rem;cursor:pointer;text-align:left;position:relative;z-index:900}
+#tbar[hidden]{display:none}#tbar .tk1{font-size:1.4rem}#tbar>span:nth-child(2){flex:1;line-height:1.25}#tbar .go{font-weight:900;white-space:nowrap}
+#tbar:hover{filter:brightness(1.05)}
+.feat{display:grid;grid-template-columns:64px 1fr auto;align-items:center;gap:14px;width:100%;text-align:left;cursor:pointer;color:var(--ink);background:linear-gradient(120deg,var(--c1),#ffdf7a);border:0;border-radius:16px;padding:16px 18px 16px 14px;box-shadow:0 8px 24px #0005;transition:.2s}
+.feat:hover{transform:translateY(-2px)}.feat .fi{font-size:2.6rem;text-align:center}
+.feat small{display:block;text-transform:uppercase;letter-spacing:.18em;font-weight:800;font-size:.72rem}.feat b{display:block;font-size:1.25rem;line-height:1.2;margin:2px 0}.feat em{font-style:normal;font-size:.92rem;opacity:.8}
+.feat .fb{background:var(--ink);color:#fff;border-radius:10px;padding:12px 16px;font-weight:800;white-space:nowrap}
+@media(max-width:850px){.feat{grid-template-columns:48px 1fr;gap:10px}.feat .fi{font-size:2rem}.feat .fb{grid-column:1/-1;text-align:center}.feat b{font-size:1.1rem}#tbar{font-size:.85rem;padding:9px 12px}#tbar .go{display:none}}
+main{height:calc(100vh - 190px)}@media(max-width:850px){main{height:auto}}
+#wipe{background:linear-gradient(var(--sky1),var(--sky2) 60%,var(--sky3))}
+
+.moonG,.stars{display:none}
+:root[data-theme=dark] .sunG{display:none}:root[data-theme=dark] .moonG,:root[data-theme=dark] .stars{display:block}
+:root[data-theme=dark]{--sky1:#060c1c;--sky2:#12203f;--sky3:#2b3a64;--m1:#3b4d78;--m2:#293a5f;--m3:#17302e}
+.stars circle{animation:tw 3s ease-in-out infinite}.stars circle:nth-child(2n){animation-delay:-1s}.stars circle:nth-child(3n){animation-delay:-2s}
+@keyframes tw{50%{opacity:.25}}
+@media(prefers-reduced-motion:reduce){.stars circle{animation:none}}
+
+/* v7 : transitions supplémentaires */
+#wipe.in{transition:all .34s cubic-bezier(.7,0,.3,1)}#wipe.out{transition:all .4s cubic-bezier(.7,0,.3,1)}
+#wipe[data-v=b],#wipe[data-v=h]{-webkit-mask-image:linear-gradient(#000,#000);mask-image:linear-gradient(#000,#000);-webkit-mask-repeat:repeat;mask-repeat:repeat}
+#wipe[data-v=b]{-webkit-mask-size:0% 100%;mask-size:0% 100%}#wipe[data-v=h]{-webkit-mask-size:100% 0%;mask-size:100% 0%}
+#wipe.in[data-v=b]{-webkit-mask-size:12.5% 100%;mask-size:12.5% 100%}#wipe.in[data-v=h]{-webkit-mask-size:100% 14.3%;mask-size:100% 14.3%}
+#wipe.out[data-v=b]{-webkit-mask-size:0% 100%;mask-size:0% 100%}#wipe.out[data-v=h]{-webkit-mask-size:100% 0%;mask-size:100% 0%}
+#wipe[data-v=m],#wipe.out[data-v=m]{clip-path:polygon(0% 108%,12.5% 104%,25% 108%,37.5% 104%,50% 108%,62.5% 104%,75% 108%,87.5% 104%,100% 108%,100% 100%,0% 100%)}#wipe.in[data-v=m]{clip-path:polygon(0% -25%,12.5% 0%,25% -25%,37.5% 0%,50% -25%,62.5% 0%,75% -25%,87.5% 0%,100% -25%,100% 100%,0% 100%)}
+#wipe[data-v=c]{clip-path:circle(0% at 0% 100%)}#wipe.in[data-v=c]{clip-path:circle(150% at 0% 100%)}#wipe.out[data-v=c]{clip-path:circle(0% at 100% 0%)}
+#wipe[data-v=x],#wipe.out[data-v=x]{clip-path:inset(0 50% 0 50%)}#wipe.in[data-v=x]{clip-path:inset(0 0 0 0)}
+#wipe[data-v=z]{opacity:0;transform:scale(1.18)}#wipe.in[data-v=z]{opacity:1}#wipe.out[data-v=z]{opacity:0;transform:scale(.88)}
+
+/* onglet tombola réductible */
+#tbar{display:flex;align-items:stretch;padding:0;gap:0;background:var(--yel);color:var(--ink)}
+#tbar .tmain{flex:1;display:flex;align-items:center;gap:12px;border:0;background:transparent;color:inherit;padding:10px 6px 10px 16px;font:inherit;font-size:.95rem;cursor:pointer;text-align:left}
+#tbar .tx{border:0;background:transparent;color:inherit;width:52px;font-size:1.15rem;font-weight:900;cursor:pointer;border-left:1px solid #0002}
+#tbar .tx:hover{background:#0001}
+#tbar .tp{display:none;font-weight:800;text-transform:uppercase;letter-spacing:.08em;font-size:.8rem}
+.tc #tbar{display:inline-flex;margin:8px 12px;border-radius:99px;overflow:hidden;box-shadow:0 3px 10px #0004;width:auto}
+.tc #tbar[hidden]{display:none}
+.tc #tbar .tt,.tc #tbar .go{display:none}.tc #tbar .tp{display:inline}
+.tc #tbar .tmain{padding:6px 4px 6px 14px;gap:8px}.tc #tbar .tk1{font-size:1.1rem}.tc #tbar .tx{width:40px}
+#tbar[hidden],#featrow[hidden]{display:none}
+.featw{position:relative}.feat{padding-right:64px}.fx{position:absolute;top:8px;right:8px;width:38px;height:38px;border-radius:50%;border:0;background:#0002;color:var(--ink);font-size:1rem;font-weight:900;cursor:pointer}.fx:hover{background:#0004}
+@media(max-width:850px){#tbar .tmain{font-size:.85rem;padding:8px 4px 8px 12px}#tbar .go{display:none}.feat{padding-right:54px}.feat .fb{margin-right:-40px}}
+</style><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;800;900&display=swap" rel="stylesheet">
+</head><body>
+<div class="top">
+ <div class="dd"><button id="ddbtn" aria-haspopup="true" aria-expanded="false" aria-controls="ddlist"><span id="ddlabel">🚲 Accueil</span><span class="chev" aria-hidden="true">▾</span></button>
+  <ul id="ddlist" hidden>
+   <li><button data-v="home"><span class="ic">🚲</span>Accueil</button></li>
+   <li><button data-v="route"><span class="ic" style="background:var(--c1)">⛰️</span>Le parcours</button></li>
+   <li><button data-v="about"><span class="ic" style="background:var(--c4)">👥</span>À propos</button></li>
+   <li><button data-v="shop"><span class="ic" style="background:var(--c3)">🛒</span>Boutique &amp; tombola</button></li>
+   <li><button data-v="live"><span class="ic" style="background:var(--c2)">📡</span>Suivez-nous en direct</button></li>
+   <li><hr></li>
+   <li><button data-v="don"><span class="ic" style="background:var(--c1)">💛</span>Soutenir le voyage</button></li>
+  </ul></div>
+ <button id="back" hidden aria-label="Revenir en arrière">← Retour</button>
+ <span class="brand">Grande Boucle <span>Alpine</span></span>
+ <button id="theme" aria-label="Changer entre mode clair et mode sombre"><span id="ti">☀️</span> <span class="tl" id="tl">Mode clair</span></button>
+</div>
+
+<div id="tbar" hidden><button class="tmain" data-go="shop"><span class="tk1">🎟️</span><span class="tt"><b>Tombola dès 2 €</b> · gagnez un objet déniché pendant le périple</span><span class="tp">Tombola</span><span class="go">Jouer →</span></button><button class="tx" id="tclose" aria-label="Réduire l'onglet tombola">✕</button></div>
+<section class="view" id="v-home"><div class="hero">
+ <svg class="land" viewBox="0 0 1200 420" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+  <g class="sunG"><circle cx="930" cy="120" r="70" fill="#e8b400" opacity=".18"/><circle cx="930" cy="120" r="46" fill="#e8b400"/></g>
+  <g class="moonG"><circle cx="930" cy="120" r="78" fill="#cfd8ff" opacity=".10"/><circle cx="930" cy="120" r="56" fill="#cfd8ff" opacity=".12"/><circle cx="930" cy="120" r="42" fill="#f3f0dc"/><circle cx="917" cy="108" r="8" fill="#d9d5bd"/><circle cx="944" cy="132" r="6" fill="#d9d5bd"/><circle cx="925" cy="136" r="4" fill="#d9d5bd"/><circle cx="946" cy="104" r="3.500" fill="#d9d5bd"/></g>
+  <g class="stars" fill="#fff"><circle cx="90" cy="60" r="1.800"/><circle cx="210" cy="130" r="1.300"/><circle cx="330" cy="50" r="2"/><circle cx="450" cy="105" r="1.400"/><circle cx="560" cy="40" r="1.700"/><circle cx="690" cy="95" r="1.300"/><circle cx="790" cy="55" r="2"/><circle cx="1060" cy="70" r="1.700"/><circle cx="1130" cy="150" r="1.300"/><circle cx="150" cy="180" r="1.200"/><circle cx="620" cy="165" r="1.200"/><circle cx="1010" cy="190" r="1.400"/></g>
+  <path d="M0 300 L120 210 L210 270 L340 150 L470 280 L560 220 L700 300 L830 190 L960 270 L1080 200 L1200 280 L1200 420 L0 420Z" fill="var(--m1)"/>
+  <path d="M0 340 L90 280 L200 330 L330 240 L450 330 L600 250 L720 340 L860 260 L1000 340 L1110 290 L1200 330 L1200 420 L0 420Z" fill="var(--m2)"/>
+  <path d="M0 385 L140 340 L260 385 L420 330 L560 390 L700 345 L860 395 L1000 350 L1200 395 L1200 420 L0 420Z" fill="var(--m3)"/>
+ </svg>
+ <div class="in"><span class="kick">Lyon · Alpes · Italie · Autriche · Allemagne</span>
+  <h1>La grande<br>boucle <span>alpine</span></h1>
+  <p>Deux cyclistes, 19 jours, 1 500 km à vélo à travers 6 pays. Suivez l'aventure étape par étape.</p></div>
+ <div class="road"><i></i><div class="pair"><div class="rider b sm"><svg viewBox="0 0 150 100" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<g class="bob">
+<g stroke="#e9e7e1" stroke-width="3.6"><g class="spin"><circle cx="32" cy="72" r="22"/><path d="M32 52v40M12 72h40M18 58l28 28M46 58L18 86" stroke-width="1" opacity=".55"/></g><g class="spin"><circle cx="118" cy="72" r="22"/><path d="M118 52v40M98 72h40M104 58l28 28M132 58L104 86" stroke-width="1" opacity=".55"/></g></g>
+<g stroke="#2f8fe0" stroke-width="4"><path d="M32 72L70 72L60 38L32 72M60 38L108 38L70 72M108 38L118 72"/></g>
+<path d="M50 31h15" stroke="#222" stroke-width="3.5"/><path d="M60 38l-2-7M108 38l-2-9M104 29h10" stroke="#333" stroke-width="3"/>
+<g class="pose p0" style="animation-delay:0.07s"><g opacity=".7"><path d="M58 29L80.3 51.9" stroke="#1d2128" stroke-width="9"/><path d="M80.3 51.9L58.0 72.0" stroke="#f1d3bd" stroke-width="5"/><path d="M54.0 73.0h9" stroke="#222" stroke-width="4"/></g><path d="M58 29L87.0 42.4" stroke="#1d2128" stroke-width="9"/><path d="M87.0 42.4L82.0 72.0" stroke="#f1d3bd" stroke-width="5"/><path d="M78.0 73.0h9" stroke="#222" stroke-width="4"/></g><g class="pose p1" style="animation-delay:0.21s"><g opacity=".7"><path d="M58 29L89.0 36.8" stroke="#1d2128" stroke-width="9"/><path d="M89.0 36.8L70.0 60.0" stroke="#f1d3bd" stroke-width="5"/><path d="M66.0 61.0h9" stroke="#222" stroke-width="4"/></g><path d="M58 29L76.9 54.8" stroke="#1d2128" stroke-width="9"/><path d="M76.9 54.8L70.0 84.0" stroke="#f1d3bd" stroke-width="5"/><path d="M66.0 85.0h9" stroke="#222" stroke-width="4"/></g><g class="pose p2" style="animation-delay:0.35s"><g opacity=".7"><path d="M58 29L87.0 42.4" stroke="#1d2128" stroke-width="9"/><path d="M87.0 42.4L82.0 72.0" stroke="#f1d3bd" stroke-width="5"/><path d="M78.0 73.0h9" stroke="#222" stroke-width="4"/></g><path d="M58 29L80.3 51.9" stroke="#1d2128" stroke-width="9"/><path d="M80.3 51.9L58.0 72.0" stroke="#f1d3bd" stroke-width="5"/><path d="M54.0 73.0h9" stroke="#222" stroke-width="4"/></g><g class="pose p3" style="animation-delay:0.49s"><g opacity=".7"><path d="M58 29L76.9 54.8" stroke="#1d2128" stroke-width="9"/><path d="M76.9 54.8L70.0 84.0" stroke="#f1d3bd" stroke-width="5"/><path d="M66.0 85.0h9" stroke="#222" stroke-width="4"/></g><path d="M58 29L89.0 36.8" stroke="#1d2128" stroke-width="9"/><path d="M89.0 36.8L70.0 60.0" stroke="#f1d3bd" stroke-width="5"/><path d="M66.0 61.0h9" stroke="#222" stroke-width="4"/></g>
+<path d="M58 29L91 19" stroke="#2f8fe0" stroke-width="12"/>
+<path d="M92 19L100 27L108 30" stroke="#f1d3bd" stroke-width="4.5"/><path d="M92 19L98 24" stroke="#2f8fe0" stroke-width="6"/>
+<ellipse cx="93" cy="13" rx="5" ry="5.6" fill="#e6c24a" stroke="none"/>
+<circle cx="99" cy="9.5" r="7" fill="#f1d3bd" stroke="none"/>
+<path d="M91.5 8.5C92 1 106 0 106.500 8.5L99 6.500Z" fill="#f4f4f4" stroke="none"/><path d="M92 8c1-3 3-4.500 5-5" stroke="#e6c24a" stroke-width="2.500" opacity=".0"/>
+</g></svg></div><div class="rider a"><svg viewBox="0 0 150 100" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<g class="bob">
+<g stroke="#e9e7e1" stroke-width="3.6"><g class="spin"><circle cx="32" cy="72" r="22"/><path d="M32 52v40M12 72h40M18 58l28 28M46 58L18 86" stroke-width="1" opacity=".55"/></g><g class="spin"><circle cx="118" cy="72" r="22"/><path d="M118 52v40M98 72h40M104 58l28 28M132 58L104 86" stroke-width="1" opacity=".55"/></g></g>
+<g stroke="#e4572e" stroke-width="4"><path d="M32 72L70 72L60 38L32 72M60 38L108 38L70 72M108 38L118 72"/></g>
+<path d="M50 31h15" stroke="#222" stroke-width="3.5"/><path d="M60 38l-2-7M108 38l-2-9M104 29h10" stroke="#333" stroke-width="3"/>
+<g class="pose p0" style="animation-delay:0.00s"><g opacity=".7"><path d="M58 29L80.3 51.9" stroke="#1d2128" stroke-width="9"/><path d="M80.3 51.9L58.0 72.0" stroke="#f1d3bd" stroke-width="5"/><path d="M54.0 73.0h9" stroke="#222" stroke-width="4"/></g><path d="M58 29L87.0 42.4" stroke="#1d2128" stroke-width="9"/><path d="M87.0 42.4L82.0 72.0" stroke="#f1d3bd" stroke-width="5"/><path d="M78.0 73.0h9" stroke="#222" stroke-width="4"/></g><g class="pose p1" style="animation-delay:0.14s"><g opacity=".7"><path d="M58 29L89.0 36.8" stroke="#1d2128" stroke-width="9"/><path d="M89.0 36.8L70.0 60.0" stroke="#f1d3bd" stroke-width="5"/><path d="M66.0 61.0h9" stroke="#222" stroke-width="4"/></g><path d="M58 29L76.9 54.8" stroke="#1d2128" stroke-width="9"/><path d="M76.9 54.8L70.0 84.0" stroke="#f1d3bd" stroke-width="5"/><path d="M66.0 85.0h9" stroke="#222" stroke-width="4"/></g><g class="pose p2" style="animation-delay:0.28s"><g opacity=".7"><path d="M58 29L87.0 42.4" stroke="#1d2128" stroke-width="9"/><path d="M87.0 42.4L82.0 72.0" stroke="#f1d3bd" stroke-width="5"/><path d="M78.0 73.0h9" stroke="#222" stroke-width="4"/></g><path d="M58 29L80.3 51.9" stroke="#1d2128" stroke-width="9"/><path d="M80.3 51.9L58.0 72.0" stroke="#f1d3bd" stroke-width="5"/><path d="M54.0 73.0h9" stroke="#222" stroke-width="4"/></g><g class="pose p3" style="animation-delay:0.42s"><g opacity=".7"><path d="M58 29L76.9 54.8" stroke="#1d2128" stroke-width="9"/><path d="M76.9 54.8L70.0 84.0" stroke="#f1d3bd" stroke-width="5"/><path d="M66.0 85.0h9" stroke="#222" stroke-width="4"/></g><path d="M58 29L89.0 36.8" stroke="#1d2128" stroke-width="9"/><path d="M89.0 36.8L70.0 60.0" stroke="#f1d3bd" stroke-width="5"/><path d="M66.0 61.0h9" stroke="#222" stroke-width="4"/></g>
+<path d="M58 29L91 19" stroke="#e4572e" stroke-width="12"/>
+<path d="M92 19L100 27L108 30" stroke="#f1d3bd" stroke-width="4.5"/><path d="M92 19L98 24" stroke="#e4572e" stroke-width="6"/>
+<ellipse cx="93" cy="13" rx="5" ry="5.6" fill="#17130f" stroke="none"/>
+<circle cx="99" cy="9.5" r="7" fill="#f1d3bd" stroke="none"/>
+<path d="M91.5 8.5C92 1 106 0 106.500 8.5L99 6.500Z" fill="#f4f4f4" stroke="none"/><path d="M92 8c1-3 3-4.500 5-5" stroke="#17130f" stroke-width="2.500" opacity=".0"/>
+</g></svg></div></div></div>
+</div>
+<div class="stats4"><div style="--c:var(--c1)"><b>1 500</b><small>kilomètres</small></div><div style="--c:var(--c2)"><b>19</b><small>jours</small></div><div style="--c:var(--c3)"><b>6</b><small>pays</small></div><div style="--c:var(--c4)"><b>11 000</b><small>m de D+</small></div></div>
+<div class="rows" id="featrow" style="padding-bottom:0"><div class="featw"><button class="feat" data-go="shop"><span class="fi">🎟️</span><span class="ft"><small>Tombola</small><b>Gagnez un objet déniché pendant le périple</b><em>Dès 2 € le ticket · 5 tickets pour 8 €</em></span><span class="fb">Tenter ma chance →</span></button><button class="fx" id="fclose" aria-label="Réduire l'onglet tombola">✕</button></div></div>
+<div class="rows">
+ <button class="row" data-go="route" style="--c:var(--c1)"><span class="ic">⛰️</span><span class="tx"><b>Le parcours</b><small>La carte, les étapes jour par jour, les campings</small></span><span class="ar">→</span></button>
+ <button class="row" data-go="live" style="--c:var(--c2)"><span class="ic">📡</span><span class="tx"><b>Suivez-nous en direct</b><small>Où sommes-nous aujourd'hui ?</small></span><span class="ar">→</span></button>
+ <button class="row" data-go="shop" style="--c:var(--c3)"><span class="ic">🛒</span><span class="tx"><b>Boutique &amp; tombola</b><small>Merch, notre équipement, tickets de tombola</small></span><span class="ar">→</span></button>
+ <button class="row" data-go="about" style="--c:var(--c4)"><span class="ic">👥</span><span class="tx"><b>À propos</b><small>Qui sommes-nous et pourquoi ce voyage</small></span><span class="ar">→</span></button>
+</div>
+<div class="socrow"><span>Suivre</span><button class="sbtn" data-soc="instagram">Instagram</button><button class="sbtn" data-soc="tiktok">TikTok</button><button class="sbtn" data-soc="strava">Strava</button></div>
+<div style="height:100px"></div></section>
+
+<section class="view" id="v-route" hidden>
+ <div class="routebar"><div class="stats" style="margin:0"><div id="stats" class="stats" style="margin:0"></div><button class="btn" id="gpx">⬇ Télécharger le GPX</button></div></div>
+ <main><div id="list"></div><div id="map"></div></main>
+ <footer>Tracé : itinéraire Google Maps (GPX), découpé en étapes. Le col du Simplon (pointillés rouges) est reconstitué à la main, le GPX passait par le tunnel ferroviaire. Dénivelés estimés (±15 %). Les campings viennent de fiches en ligne (tarifs et dates à reconfirmer) ; ⛺ gris = position approximative ou camping non confirmé. Bivouac sauvage : interdit dans le canton de Vaud et au Tessin, toléré seulement en altitude et une nuit en Italie, Autriche, Allemagne. Les campings sont le choix sûr. Vérifier l'ouverture du Simplon et du Splügen en mai.</footer>
+</section>
+
+<section class="view" id="v-about" hidden><div class="wrap">
+ <h2>À propos</h2>
+ <p class="lead">Nous sommes deux amis qui partons à vélo pour une grande boucle d'environ 1 500 km au départ de Lyon, en mai.</p>
+ <div class="panel"><h3>Notre voyage</h3><p>19 jours de route, 6 pays (France, Suisse, Italie, Liechtenstein, Autriche, Allemagne), des cols alpins, des lacs, et un jour de repos à Milan. Nous dormirons en camping et, quand c'est permis, en bivouac ou chez l'habitant.</p></div>
+ <div class="panel"><h3>Pourquoi ?</h3><p>Ce voyage se fera au profit d'associations. <em>(Les associations seront présentées ici dès qu'elles seront choisies.)</em></p></div>
+ <div class="panel"><h3>Comment nous aider ?</h3><p>Si vous le souhaitez : regardez une courte publicité (gratuit pour vous), ou faites un don libre. Aucune obligation.</p><button class="donbtn">💛 Soutenir le voyage</button></div>
+ <div class="panel"><h3>Suivez-nous</h3><div class="soc"><button class="sbtn ig" data-soc="instagram">📸 Instagram</button><button class="sbtn tt" data-soc="tiktok">🎵 TikTok</button><button class="sbtn st" data-soc="strava">🚴 Strava</button></div></div>
+ <button class="link" data-go="home">← Retour au menu principal</button>
+</div></section>
+
+<section class="view" id="v-shop" hidden><div class="wrap">
+ <h2>Boutique</h2>
+ <p class="lead">Du merch, notre équipement de voyage, et une tombola. La boutique ouvre bientôt : voici ce qui est prévu.</p>
+ 
+ <div class="tomb" id="tombola"><h3>🎟️ Tombola : dès 2 € le ticket</h3>
+  <p style="margin:.2em 0">Un objet déniché pendant le périple à gagner. Plus vous prenez de tickets, moins le ticket coûte cher.</p>
+  <div class="tk"><button data-tk="1">1 ticket<small>2 €</small></button><button data-tk="3">3 tickets<small>5 € · 1,67 € pièce</small></button><button data-tk="5" class="main">5 tickets<small>8 € · 1,60 € pièce</small><em>Le + choisi</em></button><button data-tk="10">10 tickets<small>15 € · 1,50 € pièce</small></button></div></div>
+ <div class="sec">Merch</div>
+ <div class="shopgrid">
+  <div class="prod"><div class="ph">👕</div><b>Maillot / T-shirt</b><small>Édition du voyage</small><span class="pill">Bientôt</span></div>
+  <div class="prod"><div class="ph">🧢</div><b>Casquette vélo</b><small>Sous le casque, au café</small><span class="pill">Bientôt</span></div>
+  <div class="prod"><div class="ph">🥤</div><b>Bidon</b><small>Aux couleurs de la boucle</small><span class="pill">Bientôt</span></div>
+  <div class="prod"><div class="ph">🏷️</div><b>Autocollants</b><small>Pour le cadre ou le casque</small><span class="pill">Bientôt</span></div>
+ </div>
+ <div class="sec">Notre équipement</div>
+ <p class="tip" style="margin:0 0 10px">Ce que nous emportons vraiment. Si cela vous plaît, vous pourrez l'acheter ici (liens à venir).</p>
+ <div class="shopgrid">
+  <div class="prod"><div class="ph">🚲</div><b>Vélos</b><small>Modèle, groupe, pneus</small><span class="pill">Bientôt</span></div>
+  <div class="prod"><div class="ph">🎒</div><b>Sacoches &amp; bikepacking</b><small>Cadre, selle, guidon</small><span class="pill">Bientôt</span></div>
+  <div class="prod"><div class="ph">⛺</div><b>Tente, couchage, réchaud</b><small>Pour le bivouac</small><span class="pill">Bientôt</span></div>
+  <div class="prod"><div class="ph">🔦</div><b>Éclairage &amp; GPS</b><small>Pour la route</small><span class="pill">Bientôt</span></div>
+ </div>
+ <div class="panel"><h3>Nous soutenir autrement</h3><p>Si vous le souhaitez, vous pouvez nous aider gratuitement (pub) ou par un don libre.</p><button class="donbtn">💛 Soutenir le voyage</button></div>
+ <div class="panel"><div class="soc"><button class="sbtn" data-soc="instagram">Instagram</button><button class="sbtn" data-soc="tiktok">TikTok</button><button class="sbtn" data-soc="strava">Strava</button></div></div>
+ <button class="link" data-go="home">← Retour au menu principal</button>
+</div></section>
+
+<section class="view" id="v-live" hidden><div class="wrap">
+ <h2>Suivez-nous en direct</h2>
+ <p class="lead">Pendant le voyage, vous pourrez voir où nous sommes et ce que nous vivons, jour après jour.</p>
+ <div class="panel"><h3>Sur Strava : notre position et nos sorties</h3><p>Chaque étape sera enregistrée sur Strava.</p><button class="sbtn st" data-soc="strava">🚴 Ouvrir Strava</button></div>
+ <div class="panel"><h3>Sur Instagram et TikTok : photos et vidéos</h3><div class="soc"><button class="sbtn ig" data-soc="instagram">📸 Instagram</button><button class="sbtn tt" data-soc="tiktok">🎵 TikTok</button></div></div>
+ <div class="panel"><h3>Où sommes-nous aujourd'hui ?</h3><p class="tip">Le suivi en direct s'affichera ici pendant le voyage.</p><iframe id="liveframe" title="Suivi en direct" style="width:100%;height:360px;border:0;border-radius:12px;background:#10151c"></iframe>
+  <p><button class="link" data-go="route">Voir le parcours prévu sur la carte</button></p></div>
+ <div class="panel"><button class="donbtn">💛 Soutenir le voyage</button></div>
+ <button class="link" data-go="home">← Retour au menu principal</button>
+</div></section>
+
+<button class="donbtn fab" aria-label="Soutenir le voyage : pub gratuite ou don libre">💛 Soutenir le voyage</button>
+
+<div class="modal" id="don" hidden role="dialog" aria-modal="true" aria-label="Soutenir le voyage"><div class="box">
+ <div id="don1"><h3 style="margin-top:0">💛 Soutenir le voyage</h3><p>Aucune obligation. Vous pouvez nous aider gratuitement en regardant une pub, ou donner librement.</p>
+  <button class="big" id="watch">▶️ Regarder une courte publicité<small>Gratuit pour vous : la pub nous rapporte un peu d'argent</small></button>
+  <button class="big" id="pay">💳 Verser une somme<small>Paiement sécurisé par Stripe</small></button>
+  <button class="link" id="donclose">Non merci, fermer</button></div>
+ <div id="don2" hidden><h3 style="margin-top:0">Publicité</h3><div class="ad">Espace publicitaire<br>(à brancher avec votre régie, par exemple Google AdSense)</div>
+  <p>Merci de patienter <b id="count">15</b> secondes…</p><button class="big" id="adok" hidden>✅ Terminé, merci !</button><button class="link" id="donback">← Revenir au choix</button></div>
+ <div id="don3" hidden><h3 style="margin-top:0">Choisissez un montant</h3><div class="amts"><button data-amt="5">5 €</button><button data-amt="10">10 €</button><button data-amt="20">20 €</button><button data-amt="50">50 €</button></div>
+  <p class="tip">Vous serez envoyé vers la page de paiement sécurisée Stripe, où vous pourrez aussi saisir un autre montant.</p><button class="link" id="donback2">← Revenir au choix</button></div>
+</div></div>
+<div id="wipe" data-v="r" aria-hidden="true"><svg class="m" viewBox="0 0 1200 300" preserveAspectRatio="none"><path d="M0 300 L0 190 L150 90 L280 170 L430 40 L600 180 L740 100 L900 200 L1050 110 L1200 190 L1200 300Z" fill="var(--m1)"/><path d="M0 300 L0 250 L180 190 L360 255 L540 180 L760 260 L980 200 L1200 255 L1200 300Z" fill="var(--m2)"/></svg><div class="wheel"><svg viewBox="0 0 100 100" fill="none" stroke="#f0eee8" stroke-linecap="round"><g class="spin"><circle cx="50" cy="50" r="42" stroke-width="5"/><circle cx="50" cy="50" r="5" stroke-width="3"/><path d="M50 8v84M8 50h84M20 20l60 60M80 20L20 80" stroke-width="1.6" opacity=".7"/></g></svg></div><div class="rd"><i></i><div class="pair wp"><div class="rider b sm"><svg viewBox="0 0 150 100" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<g class="bob">
+<g stroke="#e9e7e1" stroke-width="3.6"><g class="spin"><circle cx="32" cy="72" r="22"/><path d="M32 52v40M12 72h40M18 58l28 28M46 58L18 86" stroke-width="1" opacity=".55"/></g><g class="spin"><circle cx="118" cy="72" r="22"/><path d="M118 52v40M98 72h40M104 58l28 28M132 58L104 86" stroke-width="1" opacity=".55"/></g></g>
+<g stroke="#2f8fe0" stroke-width="4"><path d="M32 72L70 72L60 38L32 72M60 38L108 38L70 72M108 38L118 72"/></g>
+<path d="M50 31h15" stroke="#222" stroke-width="3.5"/><path d="M60 38l-2-7M108 38l-2-9M104 29h10" stroke="#333" stroke-width="3"/>
+<g class="pose p0" style="animation-delay:0.07s"><g opacity=".7"><path d="M58 29L80.3 51.9" stroke="#1d2128" stroke-width="9"/><path d="M80.3 51.9L58.0 72.0" stroke="#f1d3bd" stroke-width="5"/><path d="M54.0 73.0h9" stroke="#222" stroke-width="4"/></g><path d="M58 29L87.0 42.4" stroke="#1d2128" stroke-width="9"/><path d="M87.0 42.4L82.0 72.0" stroke="#f1d3bd" stroke-width="5"/><path d="M78.0 73.0h9" stroke="#222" stroke-width="4"/></g><g class="pose p1" style="animation-delay:0.21s"><g opacity=".7"><path d="M58 29L89.0 36.8" stroke="#1d2128" stroke-width="9"/><path d="M89.0 36.8L70.0 60.0" stroke="#f1d3bd" stroke-width="5"/><path d="M66.0 61.0h9" stroke="#222" stroke-width="4"/></g><path d="M58 29L76.9 54.8" stroke="#1d2128" stroke-width="9"/><path d="M76.9 54.8L70.0 84.0" stroke="#f1d3bd" stroke-width="5"/><path d="M66.0 85.0h9" stroke="#222" stroke-width="4"/></g><g class="pose p2" style="animation-delay:0.35s"><g opacity=".7"><path d="M58 29L87.0 42.4" stroke="#1d2128" stroke-width="9"/><path d="M87.0 42.4L82.0 72.0" stroke="#f1d3bd" stroke-width="5"/><path d="M78.0 73.0h9" stroke="#222" stroke-width="4"/></g><path d="M58 29L80.3 51.9" stroke="#1d2128" stroke-width="9"/><path d="M80.3 51.9L58.0 72.0" stroke="#f1d3bd" stroke-width="5"/><path d="M54.0 73.0h9" stroke="#222" stroke-width="4"/></g><g class="pose p3" style="animation-delay:0.49s"><g opacity=".7"><path d="M58 29L76.9 54.8" stroke="#1d2128" stroke-width="9"/><path d="M76.9 54.8L70.0 84.0" stroke="#f1d3bd" stroke-width="5"/><path d="M66.0 85.0h9" stroke="#222" stroke-width="4"/></g><path d="M58 29L89.0 36.8" stroke="#1d2128" stroke-width="9"/><path d="M89.0 36.8L70.0 60.0" stroke="#f1d3bd" stroke-width="5"/><path d="M66.0 61.0h9" stroke="#222" stroke-width="4"/></g>
+<path d="M58 29L91 19" stroke="#2f8fe0" stroke-width="12"/>
+<path d="M92 19L100 27L108 30" stroke="#f1d3bd" stroke-width="4.5"/><path d="M92 19L98 24" stroke="#2f8fe0" stroke-width="6"/>
+<ellipse cx="93" cy="13" rx="5" ry="5.6" fill="#e6c24a" stroke="none"/>
+<circle cx="99" cy="9.5" r="7" fill="#f1d3bd" stroke="none"/>
+<path d="M91.5 8.5C92 1 106 0 106.500 8.5L99 6.500Z" fill="#f4f4f4" stroke="none"/><path d="M92 8c1-3 3-4.500 5-5" stroke="#e6c24a" stroke-width="2.500" opacity=".0"/>
+</g></svg></div><div class="rider a"><svg viewBox="0 0 150 100" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<g class="bob">
+<g stroke="#e9e7e1" stroke-width="3.6"><g class="spin"><circle cx="32" cy="72" r="22"/><path d="M32 52v40M12 72h40M18 58l28 28M46 58L18 86" stroke-width="1" opacity=".55"/></g><g class="spin"><circle cx="118" cy="72" r="22"/><path d="M118 52v40M98 72h40M104 58l28 28M132 58L104 86" stroke-width="1" opacity=".55"/></g></g>
+<g stroke="#e4572e" stroke-width="4"><path d="M32 72L70 72L60 38L32 72M60 38L108 38L70 72M108 38L118 72"/></g>
+<path d="M50 31h15" stroke="#222" stroke-width="3.5"/><path d="M60 38l-2-7M108 38l-2-9M104 29h10" stroke="#333" stroke-width="3"/>
+<g class="pose p0" style="animation-delay:0.00s"><g opacity=".7"><path d="M58 29L80.3 51.9" stroke="#1d2128" stroke-width="9"/><path d="M80.3 51.9L58.0 72.0" stroke="#f1d3bd" stroke-width="5"/><path d="M54.0 73.0h9" stroke="#222" stroke-width="4"/></g><path d="M58 29L87.0 42.4" stroke="#1d2128" stroke-width="9"/><path d="M87.0 42.4L82.0 72.0" stroke="#f1d3bd" stroke-width="5"/><path d="M78.0 73.0h9" stroke="#222" stroke-width="4"/></g><g class="pose p1" style="animation-delay:0.14s"><g opacity=".7"><path d="M58 29L89.0 36.8" stroke="#1d2128" stroke-width="9"/><path d="M89.0 36.8L70.0 60.0" stroke="#f1d3bd" stroke-width="5"/><path d="M66.0 61.0h9" stroke="#222" stroke-width="4"/></g><path d="M58 29L76.9 54.8" stroke="#1d2128" stroke-width="9"/><path d="M76.9 54.8L70.0 84.0" stroke="#f1d3bd" stroke-width="5"/><path d="M66.0 85.0h9" stroke="#222" stroke-width="4"/></g><g class="pose p2" style="animation-delay:0.28s"><g opacity=".7"><path d="M58 29L87.0 42.4" stroke="#1d2128" stroke-width="9"/><path d="M87.0 42.4L82.0 72.0" stroke="#f1d3bd" stroke-width="5"/><path d="M78.0 73.0h9" stroke="#222" stroke-width="4"/></g><path d="M58 29L80.3 51.9" stroke="#1d2128" stroke-width="9"/><path d="M80.3 51.9L58.0 72.0" stroke="#f1d3bd" stroke-width="5"/><path d="M54.0 73.0h9" stroke="#222" stroke-width="4"/></g><g class="pose p3" style="animation-delay:0.42s"><g opacity=".7"><path d="M58 29L76.9 54.8" stroke="#1d2128" stroke-width="9"/><path d="M76.9 54.8L70.0 84.0" stroke="#f1d3bd" stroke-width="5"/><path d="M66.0 85.0h9" stroke="#222" stroke-width="4"/></g><path d="M58 29L89.0 36.8" stroke="#1d2128" stroke-width="9"/><path d="M89.0 36.8L70.0 60.0" stroke="#f1d3bd" stroke-width="5"/><path d="M66.0 61.0h9" stroke="#222" stroke-width="4"/></g>
+<path d="M58 29L91 19" stroke="#e4572e" stroke-width="12"/>
+<path d="M92 19L100 27L108 30" stroke="#f1d3bd" stroke-width="4.5"/><path d="M92 19L98 24" stroke="#e4572e" stroke-width="6"/>
+<ellipse cx="93" cy="13" rx="5" ry="5.6" fill="#17130f" stroke="none"/>
+<circle cx="99" cy="9.5" r="7" fill="#f1d3bd" stroke="none"/>
+<path d="M91.5 8.5C92 1 106 0 106.500 8.5L99 6.500Z" fill="#f4f4f4" stroke="none"/><path d="M92 8c1-3 3-4.500 5-5" stroke="#17130f" stroke-width="2.500" opacity=".0"/>
+</g></svg></div></div></div></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const D=[{"n":1,"a":"Lyon","b":"Le Bourget-du-Lac","km":107,"up":900,"h":1,"t":"Isle-Crémieu, Rhône & col du Chat","x":"Départ de Lyon par le plateau de l'Isle-Crémieu et le Rhône, puis le col du Chat (638 m) et sa vue plongeante sur le lac du Bourget.","p":"}aivGs|y\\yHk@GqSkCwS_DcJrBiS~E@xFzC~PiB|IfDnILmJgoAsM}|@}f@cyCgEcOqHaOsEqs@HcNcCqc@}CqTEyFpAcMwAcCgF{`@zJgjBlARXqENsS~Eww@dErJiDkJx@sOnIg@bJksAmK}GfA}OMeDgAsA`Dg@lKadBSyQ`Bi@rM{pBhBkOvCfEvAmf@|Hyq@dh@tGp@hAx@mDjCyR^gQeGawAt@os@~@ZpC{YzRuPrGiRaAmGTca@eDs[dCwk@_\\gR{@y@VgDvB_HhPkVnDsNfKu|B`c@_QzLkQbKkGzJqMd@gO~FkMtEyFfDaSiB{LQ}LvXq`@fEmRtGuj@|FsJzJqIpKaZR}BsAoAxDgOWgHd@wB|DeDkGa]qD_GoHgTQwJwAeBpBwGwAsCpD{TyBuB?w]rMuPrFFbC_LbIuQ~BaVbQe_@~Vqw@n^}w@tDsEpFuC{FcRz@{KbOy_@vEqRdHuLa@i^fAeKpBmGhNqCrLcRnT}BlHwFq@iEvAsFiCqQoJeNpAsP}E{X}@ic@nE_mA~Fqr@YkJaHqe@M{l@m@gJQtAu@CMw]dDyLoUsp@aBgOCkHbGkiAaA_TnHai@qBm[`B{HlImQnFqF^qJfQ{|ApNiCtP{KnYiYfFcQlCeQpDTdFo\\n@_UdCqMyBuIJeBaH{@xCacBbFiv@bC{x@tCgQcBgToFoPD}CpGemA~G}qB|XieCcBoOsFuJyc@kVIn@nDxAfFsUdCiWhFgS|J{OpRmMtGqIhDgKtFy^zC{HnJyMtA_H~HiE~EbS~RiQfw@qb@`G{FvEkIfFcTb@{LyAc`@aCqOgAqAZcKhCiFfB{My@uF~IoKp@_I|D}HNgC|BsBBwLjB{Ji@iHmPkXkAsHV}BbDw@fI_NOmBiJ_Mq@}Fz@afBwBiCkG_]EqGh@m@w@sLoImR{FsGaK_GaFqIoDJsAlAiFkAaLdImMjBKdBiAx@sz@xV}A_QsKzKuCE{KqKqP{`@gKaRsLoNeAfAoAwAuSu^qHeJ}OoJcL{@sg@gSkf@w\\qJmBoLWeWyF_GTuEmDwFia@IcIkCaK_AcL~CiPrNwYHuUpBuUzCsNuBaMGgRkE{l@^_CeCa@moAedBuy@iQ{SsB_@uC~@aDN_HvKyCpFsGYmEgBwASyKtDoTb@kRa@iH`DdB~Cg@GyKjAwO|Au@nDfB~CAzA}EdHcEvI[vDmFx@yNzCiN~QiSLaB_BcHkFaFe@aEdBqF|E{E~BoHfDoZx@cBbH{DjDqEbMiBjG\\zCiDjTLvCiGnCiQpPoFnEXlCzF~JmDfG`@nDgBtF[xKxBxc@wsBnJo@g@mCXiAfBFA{ApIZCw@gBJBuC_Cs@`GkF~[|CbH{AzU`ArBsBlJ}@vTuHbK~CvXkDhLz@vLmGzCmEbJv@lA_IzFmKpEmCpFM","lunch":["Rives du Rhône à Brégnier-Cordon",45.65498,5.68888,"Pique-nique au bord du Rhône sur la ViaRhôna, avant la montée du col du Chat."],"camp":["Camping International de l'Île aux Cygnes",45.6492,5.8605,"Le Bourget-du-Lac · ouvert avril–septembre · tarif spécial 2 cyclistes + tente · recharge téléphone/GPS à l'accueil.",1],"note":null},{"n":2,"a":"Le Bourget-du-Lac","b":"Nyon","km":105,"up":650,"h":0,"t":"Savoie, Genève & Léman","x":"Aix-les-Bains, Rumilly, Haute-Savoie, Genève et son jet d'eau, puis la rive nord du Léman.","p":"curuGeoxb@~@aC_Aaq@VimBg@uDkNVwA_D}ClE{BkEaCm@y@pAaMoIgDOwBtBsi@mLgIbA{Q`KiJtAol@}BgLZew@uI_F~GKmAkDkCgBdCYoAkBPeE{EeD}LqEmu@jDwIzNcDmEOuGyFuAvAiGoIkp@_Duy@oh@aJtAoBwDaPsMyLqD}GIi@xByHtAgFoBaDh@DuEmj@lAuPi@qLoAcOoEuQgJ}AfBNgCcV{\\wNec@{G_Ocj@c}@kXsZwRqM_IyCkErTiBbDKhS{ShFcUwCwo@jAs@dBuPlAcA{A{o@v@_JkBwEsC}@l@oD}B}Zw]mEeBeEnCeEb@oBpWmmBaEy`BsA}HuAmH|@qx@aAcW|JAbDeQt_@iMdMm^xQ_PpDiF`@mDsCy@}GJ}O]bB{H~CyGvHe^xNyKrL}NzCuAw@k@aHgDcF[qK}C}B}KlDgHzH}Y|NgjAzCkIfHiXPkPgEwJsHwLwEiFlBsDxDeG[o_Bzc@eh@pFyN~FkIzO{@kKuCuLsD}DsBe@mCzBcB~IkD}Pib@}A_HmDmO{S_E`@cC_EsEq@mPcOiP`A_GiDuIcBaPuWmDzC_IjBW|HaBbGeHcAkDqCeCnAcBbDcCiMmEyJg@wPsE{FqBwHcFmDaLV_H{EYkNuAeCLgG_EoIcH@yFwM{Ks@qDqCwEsRu@`@UbE_D~Eo@rI}JrDo@jBXjCaB`EiKlDqGoAvBcDe@a@{EtA}ByAsCDkIrEqJrBiCdD~@oFbBiBq@gAgQxPgCmD{D{NiBxBsNaIaCmDqOgC{H{E_AwKyCcE~@wFq@iCiK{A{A}Em@hDl@vFgJyAaAnAuV}N_AaOy@kB_UwBqVs`@_JiRoOaD\\_FlByCgCcBqEeIgTkKeFcHNkFcGaEqCsIeMuOcAkEyGkEqAyC_I_BeDkEiOhGoKs@eA}DgIaGqKoTuHwH_J{RuOkGyBiCuD|B_Gc@arE{}DgOIeGtJeBmBDsEiASoD|FgSrMkGdJmNtZaOzOcCX{L{MaKuUmK{MsOkBqEoDeIyL_AyIiDiEiFwB}F_NyEdGkI_PmH{IgYuJyX{RiFiJsNue@uSa|@wAq@oFmNiC{BgGuRub@q_@}DeIiMmMwQuKuD}PeQej@cNc\\q`@gbBqVg^uEoNyWuGcU{TgFiCmAgIgHwOR_R{@kU_H`EwLiDeFyEcOmGmS}MaZ{Ly]rK{LwDsPsByo@v@{I_D_MiIoJeBeEDwTxFqRsB{W{[gKiCwb@c\\}`Ake@aEoF{FoDkd@`V}{@h@wJsByMwHuHkHaYql@sQ}Waq@ul@cQa^sGyFyy@}]cXmPoH}A}Yo@k\\uNgp@yKuN{I_{@sz@kf@m^kFqIeNo\\kOgQoQsMoHwRiJsMkAaEuDoD","lunch":["Quai de Genève, face au jet d'eau",46.21052,6.14401,"Déjeuner sur les quais du Léman, jet d'eau et Mont-Blanc par beau temps."],"camp":["Camping Huttopia Divonne-les-Bains",46.357,6.141,"~10 km à l'ouest de Nyon · label Accueil Vélo · ouvert avril–mi-octobre · emplacements tente dès ~15 €.",1],"note":null},{"n":3,"a":"Nyon","b":"Saint-Maurice","km":97,"up":500,"h":0,"t":"Lavaux, Chillon & Rhône","x":"Morges, Lausanne, vignobles en terrasses de Lavaux (UNESCO), château de Chillon, Montreux, Aigle.","p":"izazGqfbe@wJ_GcHiK{OwG{aBo{BuDkDyPqHg}AqlBcU{a@gNkb@o`Bk~B}x@i`B_XgRhBmEkG_IgFiMgI}EoB`@N_A{DqLOqPfBaOiE}@}DgD{FeLyIkKcCuGwEuYz@Sv@oLe@aJu@yAHeG|Hew@jDwJO_RzFwUToE{Wgn@cAoKsE_B[eFjCkNO}EwRyUoH{SUaMdAKbAsCnIcl@?sj@{AiLE{MiAeEEuGwEsKy@qNyEq\\iGkReCaZkOmb@LeVwGkMkUiDiKRaBgBsZwh@yWmdAfAu@KxCfBlFfF{EtEeIP_FiCiBuQEgLkCiViX{CgAMeMgB{@}AyEcCj@kCuW{EqKiEgD_DqG`@k@wEmHoJsFkCvDeFsAkEiFaNq\\cAuKd@uA[sPg@sA_ECaBkXRaq@bMwaAzK_m@FyMdOoh@pCm`@m@eEwAyAoGVsPkEqH}S_CkMcAsYcMqp@eDs[nLsClDsYuFaQx@aI~GcUdYgh@f@mFUi\\hCc@_AoFh@sBaBu@FaGw@e@`@}BoCwBzFiVpRe^vKs^c@iD~@_PyAwNnE}Y{@gFwByBSmItBmK`@a{@oAyi@\\{MiBcSNeIbEoW`EoMvDw^xBwD]{EzD}L_C{BhF{RTaPhG_P`Ca\\~Hu]bVuo@hSe\\`Zmt@Y{e@y@qIeHoU_AoR{BsKlAqL@aYvH}X`DaFxFwRfIeKzFsNdKyKfFaMbNef@zPeu@RuIfBeJWuGp@_HmAcMa@uX`EoZjDsL^aQfCgLlAuVxByQtCyqAnBeHzDmChAyD{@yW~@{`@~KlBlEiDRcCzFwB`PIjEmJjD{LSoDtAwFMiDnAoCzGay@jXqLZcAo@yC~FuKgA}A`OkM~AaIpDifAzEsIxGsWhPmFfF_LcAkRnAiDxAHjH_Q~BkViGyk@n@sK~Tsc@pGqGbImClKpBj@mGdBm@jCnHjEqHxBaJYyFsD{IMuDpAgLhBuE`RgOQoAnD]dDuDjTXjIgMpAqE~BkBrVkBfLsKzEyBtQmAvH|BhTpNl@p@O~DvC`HtKq@hI|AbHzGlCdLzFoIjHrElDeEnT_GbNwKzAlWhKuA|FnEfCmBhAjClDgCfOKpDpUfCt@xGHjPqP`GaClWe@bPtk@dW_SnXvbAhNoNtd@_SzB|MxAfAtm@}gAdDjFtEeHjWcWtUy[xEiDpk@qJ|W`DnKCzp@qLvWaIn^S~I_EnHaJ|JiTlIs^pGoQxg@sx@dHuFxJyDz~@cOpPqHpr@i{@vTc`@vOa`@`HmIlHeCnc@gDfJmG|AxCvVoWhKqDtD|CfJaGd@pAv[u^fHgDbOaAb@gBlUyNjYnB","lunch":["Terrasses de Lavaux (Cully)",46.4882,6.73023,"Vignobles en terrasses classés UNESCO, lac Léman et Alpes de Savoie en face."],"camp":["Camping du Bois-Noir (Saint-Maurice)",46.2145,7.016,"Camping signalé à Saint-Maurice (Valais), note ACSI 6,5/10 · position approximative, à confirmer. Bivouac sauvage interdit dans le canton de Vaud.",0],"note":null},{"n":4,"a":"Saint-Maurice","b":"Brig","km":98,"up":650,"h":0,"t":"Valais","x":"Martigny, Sion et ses châteaux, Sierre, vignobles du Valais sous les 4000 m, puis Brig.","p":"mzayGs|vi@jAOp@oBd^gHxNuAvFjBte@c`@lHwQpDuUvI_MbVsTjUcKrOcLhMkChI{DfK{@bI`BXm@fMpJ|G~AdJDxs@{TvQ{HrNwCtPhBP{@r]~@nS_DhGqCpIgL`Vip@rD{DS{AxFqKtSqXdDq@hfAyrAnGgC?qAdCGF_BfIcBzHgN`Ab@wBmq@qE}k@oKqKuGr@BdBhA]cQskA}d@icBkZszAuCyIiYoi@kPm`@{_AcoCqKco@}Hs_A{Fub@kInJaMok@q]mRbCuGqW{B{IqDiF{GqJkU{CgW}BupAPeLjFcTuC}APwE}EsLeLwOaEwTaT}l@?gBlAqAuEe\\rHkGgKmWwWea@kJuVgi@weB}KakAeD_QiKo[yXgi@aBmAaGiS{@{Ji@si@tBeg@yAcXwDsTcQqk@sFeXgCq@TgDmWagAaI_N{CaBwDkJsLmRyK{MeAj@mCkB[jGgAJ{GwGS_ByIoAPmDoQyHei@an@iGmMgCqN}@sRdB}~AbAmOvUil@fB_VqAgQaDuL{DyHw}Bc_EmO}`@kSgpAea@{tBaRelBkEbAkYuzCyFxAaEaKq@GsBsH}EdBmKi@yEfE_Db@wUiMeAGoAlB}IaJaDaMk@sHfBmC_CwSaN_c@kPoWk@eQdDeHX{IeJ_WX_BsBuXuDoQS}SiKt@{Lq@aD}[aC_CcJoXM}w@gKok@uM{dBSkRzE{e@zOkc@ZiWbBgJ\\bDd@?E{E`D_KbBwb@|GgSlI_MkBmH`CsYpGiK~Hs@fBuCaAcr@aNeBl@yVi@yY{MkrAcG{YoAqq@AwZhD}p@y@}TbBkExC{Qt@aM_DeC`E_OI{Gp@eAnBc_@a@qArCaIb@oOs@sH_BgExBhBZmCgNgaAq@iPxQooCDu{AuA_B@aAbA@mC{Y{@mnAcGsxAnCJXxF~GzCcBma@`HcIzBYrB_v@qH{DlGqp@xKgf@fBsDgA{Fq@[{@bCwBoAnBoQZwt@i@_Gp@gCzAilA`C{m@YmVrEyPvAgSp@D|EqHt@HlCcGDgOsHq\\Boe@yC_KiAoJ[_WwDm^tJiCeEoNoZ}k@}Pgy@gNm\\{Hg`@c]spA{Mkn@oFaNqA_Q~Ca@","lunch":["Château de Valère, Sion",46.23257,7.36979,"Vue sur la vallée du Rhône et les châteaux perchés de Sion."],"camp":["Camping Geschina (Brig)",46.3098,7.9945,"Au pied du Simplon · ouvert 25 avril–25 octobre · tente dès 6 CHF · cascade à côté · piscine publique voisine.",1],"note":null},{"n":5,"a":"Brig","b":"Domodossola","km":47,"up":1500,"h":1,"t":"Col du Simplon 2005 m","x":"Grande ascension alpine puis gorges de Gondo jusqu'en Italie. Passage du col reconstitué à la main.","p":"k{uyGszvo@qD__@}DwQf@]l@tElAe@iDiXoC_O_KgY_@{MfAsK|EaP|BuZ|e@cgAnlA{Tzr@co@jgBg^noB~p@~_AfOvmA{^ftD{_Br`AsSjH{lCoKg{CnKg{CnA_oAnPslEwe@kxAcp@gdAhEgh@mArAU|LlAbBIhHpIow@KiQuDgb@|A_SBwYqEkRoI_D{EkEtCe\\~EiV~BmX~]a{@dEwh@xHoK`\\or@jTwI|K_PpMwCnD{GrCiBpq@qHjRoJdXq@dKmEjOfBpNgHpNwKdSwDtOsYI{RlIqUw@{NiCyEfEAvIdLpJpUbdB|Ln@|@fAu@dQrBr@iDzSIxGsCxQkO`JR~QcD|EX","lunch":["Col du Simplon (2005 m)",46.2506,8.0334,"Pique-nique au sommet du col, Alpes valaisannes tout autour. Étape courte : prends ton temps."],"camp":null,"note":"Pas de camping vérifié à Domodossola : un forum de campeurs conseille plutôt de dormir sur le lac Majeur (Verbania, Baveno)."},{"n":6,"a":"Domodossola","b":"Borgomanero","km":67,"up":350,"h":0,"t":"Ossola & lacs piémontais","x":"Vallée de l'Ossola, Gravellona Toce au bord du lac Majeur, collines près du lac d'Orta.","p":"}_nxGczsq@`Vp@dEnArIhHdFd@fLBvMcHpD`@~ItHzuBpcCxDoKrGs@~E}DbH|IdArDdAXj@fEnGyFlR}CfFzDpA|G{Bcs@gBmI}AgBl@gBddAz`@hK[rKbErNoGvH~HfSgDzIfAfq@o@fPkGpDVjIiLxDGlBeDbJqEnUCl[zIrLmEtByC|JuBdM|@xEsBvMkMnMiSvNoJ|Teh@xC_oDvq@aiE`DyUjAqSWsDyFoLhIsi@wGsyBdWe{@fAkHjHqClC}JvJ{J`DkHpUuHx_@u`@zRw_@|@xAvEwG~i@}b@rL_QdD|AnD{BpJa@ZeBj@bAvHAzSzFjRd@tGtBfi@_VlFLxIuDqAmGhJ}ExLoLu@yHzAqIzGzUza@ds@nH~IdG~Bs@jJ~KfCHjD|EFC`A{EfC~ArH|AhBdIoNvMjE`IJdE~EtMlDtAhBvINlDhEvA`IxEnFfGuJz`@xQzXdRc@_Hz@{Ht@gC`BSxIvLnGNbPpJ~UnDb[lUtIl@pMmKfJg@dKjBfItPB`DzCBzAnG~KtIhKfZl@`MkC|R|Fx@~D_B|DbA`VnTpCpEuBp@CtAjG`LkDnAC`ArMfGtGdAtFk@tFxFlJYvSzTbItAnM~LfGjAp@jDhD`CtO}AhJpDlDjJ|KtG|JtSfHjG~AzFzOu@lQbIpPrM|VxGjSkUzEwIrD}BrBz@pHhKvV~JjLm]jCgCdB_FzEcYtDcG`D_@`D_H~Bf@`JqTnDh@`C~IrABtCqCnKvGrf@sBfJiFfKi@fNwHvAf@@wBzRgVli@_ZnAyApK_fApHgP~A]|@{F`HaI|FmCtDeLlEqDjUyj@zFsCzQEtD|@bFoQ~FoMvX]rVyJDmSp@SN{C|E{CzHeJlDtGhNw@vB`Ff@cAtZqG~SgNrMsCp\\iWhs@iK~G_CfAx@b@gAzFs@~]wRbXkDs@mIrNcHbLaJnBaEhKiF","lunch":["Lac de Mergozzo",45.95995,8.43617,"Petit lac turquoise bordé de montagnes, baignade possible."],"camp":null,"note":"Pas de camping vérifié ici : cherche autour du lac d'Orta ou de Gravellona."},{"n":7,"a":"Borgomanero","b":"Milan","km":86,"up":350,"h":0,"t":"Plaine lombarde","x":"Plaine du Pô, canaux, arrivée sur le Duomo de Milan.","p":"q}{uGmerr@xG}Al@lBz]uM|@w@YuCfZyEnEiD|o@iYba@yClTsM~f@sUnQ}L~OuDnO}IgCyCmAiLkEqD}DkRhAuBhF_CdGcNsGic@dKwMvGnBa@oFb@a@r@bAfR`@rM}AgG_UgCmz@xEAQ{HmBgMpa@{o@fLwTxVsZbEk]xX}ShFaAyGe\\nZuFhPiKu@qGhFwHC}RdL}TdCiRrKiF~DsM|IaLrs@it@oMa]rPiN{Oau@`Jac@U}IoDaOlVgcB|@yTrHaPkLgy@dCkW~Dq@xAcHsHil@mCiHaEiFdEsBDw`@zDkArB}Eg@gTbGeLmAoE?yF`Jt@zDeANqFhDkA{Iem@xAqn@tEaNs@}E?wKxUcc@hE_NzNe[jIyg@jAmb@dDApEtCrGrLjGr@zKy@nG{C_BmHjCiAG_D`ViFdN}R`NwLt`@sSzSwAyDiB}EuIlTiTv{@i_BvFiShB}_@lC}cBgVyrA_AgMWwYbByJdIuKpBqFnU_qAfBqTLiNoDwk@NmHrWmvAhNy`@rByZk@_IwGgUm@gHeAZAuCt@{P|AkIn@b@bBkG`CDq@wE|DgSbAuQgFevAzAgeAyDah@|Ewg@dBqd@cA_OoIaa@e@}GzDsc@QawA{IgrAgBaIaHgIqLMi@u@LoCw@@b@`FyNMm`@md@}OcXuSiu@tFoKx@sGvDmGdGm\\VsFi`@aiEgEkXiFcO}JmNwMyIcRmDqCiFc@w]dGwVb@}Ff@wqAzAiAfA|BtCSv@zKn@Vbb@iGSiCvCk@MmGhEgLuC{i@~BE`CxL@gBdEuB_B{Utb@cHeByTfBaDjEe@KyC~BqKaGcq@yI{Qk@qIn@oCvHeGvZuF|^c@hRnCrEMwWmfA~\\u^q@mIYai@lIO]s\\`M`AjHgByHa\\dImD~@uF~AC`AwBfJiDbH_L}@mDy@mq@jTsQuBoYeCwGzBiRiAaExDcCbIi@iBoB_Na]}Fmx@pMiGl[yg@|SoVnGiNhIkIzKcDjMOjBqB|\\qG~]gZhg@wIbs@hUnC|BjMz@lF`GrAtD^hDg@~Ip@xAh@SMgBjDiDl`@eMnBgB~RmB~D|ExGcJxBxDpEiBzDvAbCcE","lunch":["Rives du Tessin à Turbigo",45.55206,8.73958,"Rive du Tessin, grande plaine du Pô avant Milan."],"camp":["Camping Città di Milano",45.47447,9.08206,"Via Gaetano Airaghi 61 · ouvert toute l'année · ~35 €/nuit en mai · bus et métro vers le centre (~45 min). Avis très mitigés sur l'entretien.",1],"note":null},{"n":8,"a":"Milan","b":"Milan","km":0,"up":0,"h":0,"r":1,"t":"Jour de repos · Milan","x":"Jour de repos à Milan : Duomo, Navigli, Brera. Lessive et entretien du vélo.","p":"","lunch":["Navigli de Milan",45.45,9.17,"Jour de repos : déjeuner et apéro sur les Navigli, quartier Brera."],"camp":["Camping Città di Milano",45.47447,9.08206,"Via Gaetano Airaghi 61 · ouvert toute l'année · ~35 €/nuit en mai · bus et métro vers le centre (~45 min). Avis très mitigés sur l'entretien.",1],"note":null},{"n":9,"a":"Milan","b":"Gravedona","km":107,"up":500,"h":0,"t":"Lac de Côme","x":"Côme puis la rive ouest : Menaggio, Dongo, Gravedona face aux Alpes.","p":"cqotG_m`w@cCbE{DwAqEhByByDgAoIuEn@yC{Y}QgBiLcDmGsDsL}OK_ApHmS_@y@mGtNaCg@iDyFyAxAcn@cv@mKzYcR`dAaCbAGrFgA[PzE{b@fHs]`Zwb@jJuE?aIid@gA[_Z~Js@sEuCiDqLkb@qCoFoGwDgAaHm@qR|@iAqDeTf@iCqDmJeAiWwGuCBmQgQeA_@yAhBk@CkAiEcHumAn{@WzB{Eo@uMv@mZjKmTnNyWlGcAaAuCqQc@NqGm`@kVxH{A_JaIrDaHkKkBiH\\kAaAwIx@wFo@oEaB}BYwEcE{GmYhJZbIu[pLAbAyAh@DyCy@cBmGgn@iDeEqc@EeWeBcXTuHwD{PfHn@hFsRbGeDcRkUs@wr@fWmGkb@AcF{K]yC|AiDgBwIHoCnGqDbAeB`DsA{@mDqLoAu@ynBiFqCv@y\\oBkR`@_KbDyAjOyCnBgEhAkNmDaGQoAmA{DfA}ArCmGBsTrFoApLib@fHjEbHtDxR{Itj@Zp@wEvK_Mtf@sBnAgBUoe@uVqI`CuGpOyYf_AsGrD{Wpd@EnEiBnD}RvUiP`FeHrKaBfFiE~Eoe@xI}Aw@_Cr@uIi@qNwD_I~Eu[l[aA?kKhWiFlCTnL_AbJeOvi@cRpc@kFza@qCnBi@xCqGw@qJ}IuHKcEdE{N{@[pJs@Py@lHoEyBmLK{NzD_Be@o@dLt@vDg@nC`@n\\iEdXkKpImp@`FuHdI?dH}@dCyMdPkUTeBvHoIdPm@jV_Qw@oAfAqAxj@{AlGqf@dLoFc@}HvK{BaAs@gEkEkEwE}@eCiD_LoBkYhg@q]|BuQ|DbEfP}NbN}AuCgN`M}E}FgEdBDnAo@HDrK}G`Gr@tYpAlEqKfRuBW}JlC@z@mEPyAjCcAgCyLoGmTeD}IyGiDU{KaKwIL{n@iQwKcOqWyHgAiDw@oVzBaSiCuIaCuAc^eAkC}AqBuEaHuHqCWkDgHeF}BsH}Ng@cNkC_L{HoGoCmO_IgEoEiIoFuQsDqFwEgWsKyZcEeSgOs[uKoZwHsJqHgSaILkE_GkIgCcLuKwHq@mIaE_GOuGcDcE@sQpNsG|McJlJeIrCyc@r]}QtDm[{BcDcBiEbAeBqAmMYoUbEwGo@uHzByJA{PdGwCpDqHnAkG}@wIvAkKw@wOjByAcAiONkEmA{CfDiF{DwHkO}BoNyGyQwPe[_L_[ySaw@gEuGiCaS{NgVsCeKkWeYeDsNgE}D}EcNCiClGoUp@mYv@}EmBoDwIoh@mAmCaQiL}LoO}Tsa@oEqNeDgEgBeK_As[qFyOx@cO~AuH@yKeEgIk@}HwDmLwFiJqQwd@uBeB{MkIwTaJkSdE{H|G_G~@iH`I}CpA_Rx@{c@sF{OsHwErCaP[mEaGkLuFgNa@{FdB{C|C{I\\gDrBwShAmQgDqGmCkQaXeFeTd@}UyB_KkD]kGgHab@{JyHcMyM{JeUFaPiOiNmX_GgRqQqEkFkMkGwCgDgKcDwD_DcIw@HcAxCaCb@qIcE{Hc@wWxHmEL}ReF{FgEuN~C{E_AyLiI{HNgIkCyBh@cBs@uBxAuAzEeFgByEnC}D`IoGjBwCK{EqDuEIyEcDuLbG}Q_D{NtBqMUcEyEeG}BkH{IaRxAsCtBwB}Aa@hA}CoE}ScKgDuJqLsJyFgBuSaBq@cM^{Im@mDqAMGbAuDlCaCqEcDyI|Am@_AiMLyNgC]yIwW{GeK{Aw@sEXCbEuCp@H`DcA`@]yA_CtCgAuAkAbAeCiAaAbBgHaC","lunch":["Lungolago de Côme",45.81203,9.07994,"Déjeuner sur le front de lac, façades colorées et montagnes plongeant dans l'eau."],"camp":["Camping Gardenia (Domaso)",46.1655,9.3305,"Via Case Sparse 164, sur le lac de Côme · alternative : Camping Magic Lake à Dongo.",1],"note":null},{"n":10,"a":"Gravedona","b":"Campodolcino","km":48,"up":1100,"h":1,"t":"Val San Giacomo","x":"Chiavenna, cascade de l'Acquafraggia, montée vers Campodolcino.","p":"cftxGe~ww@sDsIr@yFwEo_Az@yZqCaPqDmKpEqUwDwIdJs@q@qKqFkXoJuJaMCwIzDqFeAmOi[{KaK_KiPiUkj@yIq[eCsRRiJ`Eu\\wBaNt@w@bAb@i@qCbC_Cc@qH}EuDoCaFc@eGjAiBQ{LqBjDoC}DwBf@eBaGh@kCy@mHfKgDSiJxBiJY{Ev@]V_EmA_ZuEuOcBXy@iGJqMqEiMXiBtHoEqBeDs@aGn@eo@oA`@kDiRaGeSeAkb@sLoJtDaF`HcRlAmHgFoEuI{Cm^wI}Fm^_XuMiFqJ}RoNoNiBu@qCoH_D_DbA_@_CiHCiG}BqDsEiBcJcARgCkQwCuFmEF{PkGsBKkDvBo@y@qBtDuAhW_ACxA\\IjDsANk@zJiBdEnA`A}@rDdCtB}IzNi@rCwUzIsEPkLuD_F^PvDoZrzAsg@h|@qd@dd@kGpI_L~UqOzHupBpxA_c@b^em@h|@sGpFcGjBcI?cl@wKgBwAiAd@xAPo@hI}UgEaHh@wAzAwKaDuC`BwHuEaJuL}C_@yCyC{IoVyB\\qByG_GsAgCgGoJuBoFuIeEzAmMoB}GfEv@nY{NuGgR|HgApCmGXmUxSgEbJcCvPiHjL}CnB}Ih@aClBqDQ_@fBcHpH_LvD]v@jALiBZ~DVsBhB_Gv@kE_D}@xGuGa@uB|AaHiHfDXAwCpB?fBcHqEdDoKqAiEtA{F}BkCx@cMpLyHzCwV|CzFgDqFNaG|Bg@bE_@_DcAhC}CLeBfB{NzEwC_@gF|E{KwBjAe@y@eAkGSyAtB\\cEeDbH}Ah@yHWA_A~BXPs@aGiBqI~Vb@}FuEtDwA|Kc@]v@uB_@w@}DlFgHhAu@sBeF}BuDqEwHvKcHzDgKfKe`@~@kCjDoUzIkZZ_CzBTpCoP|HsT`A","lunch":["Cascade de l'Acquafraggia",46.33849,9.3698,"Grande cascade visible depuis la route, avant la montée vers Campodolcino."],"camp":["Camping à Campodolcino",46.401,9.351,"Un camping existe à Campodolcino (nom non vérifié) · alternative : Camping Acquafraggia à Borgonuovo di Piuro, sur le trajet.",0],"note":null},{"n":11,"a":"Campodolcino","b":"Splügen","km":31,"up":1150,"h":1,"t":"Col du Splügen 2113 m","x":"Montée au col, frontière Italie–Suisse, descente jusqu'à Splügen.","p":"_oezGsaax@}W|Fqk@nR]yCsVzRsMjDqSrEgPGcIrFyVbA_DfCoUzFyCWgCtBvHv@aH~AiBA_EcDuIrAuPzRsEbBiDuDyAkHBkD`BgCuErAbKcLzEuArBsD`LeBvBgCrGdExKR`F{BqDEfL}NdJuy@kCuIwJeE{IgKoIaCqByEiJkHkF_@eNcFyJgIy[wEE`EgEi@A`AoCvAbP|SjAjFeBbKcDlBC~EeAbAhClE^bE`CjA}C~JhBlCm@|GkCu@cBfAgEGXoLiAwAsNrBuDqDg@jB{G~AqHcBcMuHe@mB{KpNwA^w@pCiB?kBhBwFE{GsDqD^mEeFeCt@iK_Gye@wAoXqLaGsHoIQaFrB}B`EeIfEu@hHwD~Eq@hNfBvE`AnMoNdZs@dH`CrIsE`Pg@{EqBjJqEpJk@NUgBoAzD{C~BqBJdB}EoAjA{H`@yCdCdAyDcGlFkBd@fAuBeYlIeByDkBj@qDoEwOhBcNxFaCtH}GfI}@{BxAeAuDf@{A}DxCyAhBuEqDpC{CRdHkIuNbFqAkAkL`CrDaEgEnA~CkDaEzA|CuEgDdAhBgDyCfAbAkFsDrB}d@zI{FoCuNzDmCxD}DUiUrIwLDa@xA_G]aLvCyKzGsDmA_GsHgA~FqCz@mDxFxA~GeAdJ]gHkFqF_@gDF|Rc@Hw@oG_CuELtO_HgVoChByD?","lunch":["Sommet du col du Splügen (2113 m)",46.51122,9.32988,"Frontière Italie–Suisse, panorama sur les Alpes des Grisons."],"camp":["Camping Splügen",46.5497,9.319,"Campingstrasse 18 · ouvert toute l'année · altitude 1470 m · tentes acceptées · dès ~35 €.",1],"note":null},{"n":12,"a":"Splügen","b":"Vaduz","km":91,"up":350,"h":0,"t":"Viamala, Coire & Liechtenstein","x":"Gorges de la Viamala, Thusis, Coire, vallée du Rhin, Vaduz sous son château.","p":"_wb{Gy}{w@{RIsC_KcBfAaFeFkFcUqE{JoAmO}BqHsCmCq@kDwF{JgHq^kCyBoDcMaFoYyEgOoFqIuHy^wBaEMwIqFmGrAeHy@m@}EaTTcTpAgCa@wW`BkPpAwDxDyD]iEj@{Nf@d@^lLr@AIcGlAmNeBsUhLu^`Bag@qAcN{GcX{@cJLaGeL{_@cJfAyEkIsDpB}GGgD`DcIgAwIqOwAiLw@zPa@gK_C{CdAtC]|BcDkL\\rIoBsG_Ba@sE\\{BvCwElBuMmAeLiLkM_Ry@g@aDrBcCvF]yC_Hd@u@cEiDkGqDkCiTdE}FbJ{@?mIiAiFsCmv@{S{B`@iZ_EiOsIoEcHqBOq@xAkIoDsD_EgPaBD_KwNiC[cFuA{AuIjDaFg@eQuReIwDiItK_Cd@oMk[uOyGcHG{KwD{BrB{C{BuMmDoIhCiE}@kFpDyEb@yHcCqCbBoD]}EpGyDrAkJeFmK_KuOh@qWtHcH_CoEmFyAUa\\|KyJ~LsMdDkDlDeEpAyD`MgIfGcI_C}D`CuGoJgK_AeSdG{X~CqC_Goa@{HePuG{A`B}AyAqc@lW}}@zp@g\\qHqE|AcCi@qG_]aFbEsGHkKjDsK`HaG]ka@vLiBcAgGj@iHbJ{CcCcKgAyDnFcFjV}ChFiEdCmKlAyPeCeGXeDsGoHrCqKfV_LM{FvH_LxDiGrHgNs@mEfDsCNgH_CmAxBm@pK{A|DiB`@{EhGaBPwFzFcJ|BkJNmCdCoLnAsGnDiCqAsG~@yM}D}A^iS}U_IwPyC}KeCa@iC}CwCmKOsE{FoKaLaHiJuAmAoDn@oKwDeFoCj@_C{DeBaP{LePgCgM_FqIgGwPoH{Us@wG{B}DcBKyMtIgHuQ_A}S}CuKgFfCsFkLyD_AyC_SiBiD{EgDaAyCA{BdDc@vAoBzAyUaCaT}F}P{P{YgSbEwBmXeNuiAaAFJyU}BeFaAkJ}Ah@}BiQuc@iEEu[gX}A{CiDiGzHi@kAoIvJoCBeD}GuN}h@e_@iiAsJoOsLwFgRmA[sDyXgIsYkQ{NsBaQuHaMa@cMyH}HjAob@yN{Vka@b@eHiD}FaDGgJmJoNwHmEHuZuGkAd@ag@mKSuBiB|@gH{CsC^[{@g]xBo@tGseAzEil@fGcDhCcF~@qBnDeMcAyn@tGg@sAaE|Am^o@cBfK}N|IoHzHuxCflDsBnBwB_BsB|A}HT}c@hZiB`PkFzDvD[PbUcMYeE~Ay@tB_BIiQ`T{DhK}PhRyHgF_CkEoaCt}BcW|SyX|Lg|@bW{PqBuMyPqj@ilBggAwaCyGiIgu@eXeO}AwMF_e@pEa}C`j@kA{J_j@zOcByYa@cZsDwN","lunch":["Gorges de la Viamala",46.66602,9.44783,"Gorges spectaculaires près de Thusis, courte visite à pied possible."],"camp":["Camping Mittagsspitze (Triesen)",47.0975,9.515,"Liechtenstein, ~6 km de Vaduz · ouvert 1er avril–31 octobre · ~46 € · vue sur les montagnes.",1],"note":null},{"n":13,"a":"Vaduz","b":"Meersburg","km":104,"up":400,"h":0,"t":"Autriche & lac de Constance","x":"Feldkirch, Bregenz, Lindau, Friedrichshafen, jusqu'au ferry de Meersburg.","p":"yfv~Gsqby@xCxJa^tl@Q`BoDrDr@tC{Yz^_CgAqLlOZ`E}OxMsL|Nwl@x^a~@dQn@nJ{_@pHqK^qvAeVsI_DqsAay@ew@{KoXoMmqBg`BquBw~@yGoAuf@a@oNsEeCyAmJeQcO_d@aSy`@mg@i^o{@aUuIsGuf@y}@ie@gxAkGaN{JaLiUgTgLoGszA}`@ckAe`@{a@ma@enAqgBmDvC{c@oo@iX}Z}u@cp@yOcJmN_Hgk@qQkk@mNiM_AeKv@eOlG_It@yjAbFst@lWuHdAcI]cJaCkLgJaf@iv@}SwSkPgYuLyK}PoIgDcAaD`QeChYiHzEiFh@uCuEuDiBqS`A{KeAoO}E{VeOoFsHeCyJ`@{hA{AcNke@}jAyYo|@e]}r@mNke@aKavAkEaQj@gDwAReF}JDaAx@x@l@{@oBoOoAs]cDPsGkTeOhHsCqKgLgP}GiEkTuHaRwBu^tKmJ~Hyv@nbAyR~ZYtDkFpGkb@b\\eOfZ}Ztc@cF`UsCTs@r`AeBbRe@fVjA|Ap@|IzB|Df@~HfAr@eClHuFjHY~Y_GrQiE|DaXnHk@vYmAjM{ExUbAnPqDd`@eLbNgBjEeBxYqChNb@|ImKhNgJnQ_A~CyApVs@fA{D?`@fFvHpNb@bLgAdHgFaBcDtAuFrOErCnC|IwEh|@z@`IwGbXx@lGaKbGyFNkBwCkPnQgPlAiRjH{ExEmA~GkEvI{Az@z@nEuCfJiAlLHjSbAnJc@vp@{MnNqEtKyLxFgGaAqAz@xAbIx@bX~A~HY~OsHle@uBtVz@jQaCr^{G|O{Ftd@kFq@{KeFk^qGaVcAaQzFA~CoN`Qb@~BkE`AwEjFyDm@qA|KpCfB}N`EoYbW]iA{CrBoKpK}KlHKhE_XvXcaAv{AsLxGeDtU_CrGn@lA}ArHkKx]Uv\\vBJXeBZl@nCaDbMfYcMgYoC`D[m@wBvA|ALlJzSsHdGkC`zAgDnGj@~UcO|`@yLrb@_Eb]i@rh@oBnMgEnIwQtSwHj]uNfUoD`LqFtg@cCfM`AvKe@nUxA`PG`HqIv_@oJzSRt[dHrB`BoBpAVzCbMtJrTtBkBl@t@WtG`DzYg@l^dH~j@ZpUeA|K|BvMa@`BXrZgDtg@iJhd@vA~@kAlJqA|By@a@uEtXiMr]zAxB{N`\\wCl]gA`C~ExCiA|MrA`MeBdIeNr[gCxNcDxFqHpYaFlMaHp]yG~LmE|DsA~H_LjOaDfLmIjM`@h@kAv@mK~X}Hja@","lunch":["Port de Lindau",47.55193,9.68562,"Île de Lindau, phare et lion de Bavière face aux Alpes autrichiennes."],"camp":["Camping Bruderhofer (Konstanz-Staad)",47.67469,9.20876,"De l'autre côté du ferry de Meersburg (traversée en ~15 min) · ouvert 15 avril–25 septembre · dès ~25 € · à 100 m du lac.",1],"note":null},{"n":14,"a":"Meersburg","b":"Brugg","km":108,"up":450,"h":0,"t":"Constance & Argovie","x":"Ferry vers Constance, Thurgovie, Winterthur, Brugg.","p":"ocbbHamqw@gBlESlPsHtOe@pF\\xJhBpJpIbUpOdr@|`@|_DdSnx@mCrg@V`JlTfKjDfPjMw@nLlKrAzPhGhJ`G|O~GjVfIlc@nQhLd@`F~Dr@d@nDlJlC~NdQj@_FhGdAzA`D|EuFnEiBz]mFVdFhM~FNtEhCpIhJaHjBRDmFrH^xS{HdUzL~XbJhFjCQ|JrBrAzA_Br@dAdC~]lC`A|a@j_@hFjJfKJzFxE~HwD`A}FvY|GfMEpAoC|z@vwAdGzpAa@bpApCjcAsIpd@NxJ~Hvk@`E`i@xExU~IbSCx^dCf@lC{@`EfMk@NiDhQcBra@iFrZy@lZ_Gph@`@lIhAnBi@hFdBr_@_@lH}BdG`@tL}@dTj@``@{@z`@aGbc@_Nd^m@tIcMrHdBfLiBz@|BnnApWHvA`iBbFjt@s@hQ~Jhu@vCvFdFlCz\\gB~AdC`Hn_BJf_A}A|Nl@?|BxS~AjBsAlAxD~Nj`@`fCt@hY|AnBe@dMhAlEpA~@x@jh@dBtEjCpv@pF{@F~QoInSfAze@}E`hB`@jLnCe@bAhA`B`u@sHffAbChGvA|NkLbiAhLzLPbg@dBfIvD`Gg@fa@dIfAr@hGSpIx@fC~@x@bIUt_@~GrNvMdFpJ`QpAtI|EzM`AuApqAdAjRrApAtRzDpRvSxMfRrGt_@hP`TlE|ObKlVzChB|LDpAzc@zIr}@kC|l@fEnTd@dIv@hUqAx\\|Aq@s@CWrFuAzBmNdB}@pHs@@dA|MqEbDE|D_FtF~Opl@]^`CvFzOzLzQdVzAjKvElBkBtEBfElEbMt@tGiA~C~BjJgCfo@nPxh@dMpVGfC|BxI}Cli@_D|RmGhUDvKoBfJcIfu@g@xY_Qri@iC|XmFzKs@bHcAlYz@hGM~K|CrGnCdNQzAzBZvCvIDtOlCnA{Wd[fCvNeKlKvIwAjCx@pCyCyBtGyBDeFdGVx@nFwAbAn@iBhObEnWiDdDlEdHiDlIo@xWxIzIObPrBnL|VBtDhAlTbK`@zBu@`BFnEfA|EnGuBhCrKmBpFzDxFlExVbPjc@n@bF}@jAzEzOwBtFbE~I`VzeAbF`L]rAxUfG`FdPlPlWhDtKfF`DrAjCnAxIsDlCv@bCqA`BhH|a@wEj[t@dKdDlFbTvO`HFb@zDkCfk@_AdEiFnHuCrAyJhPmECiBrRR|B|ClBr@tD_DT`Adb@yKzB|EbjAr@bi@rCtVcC`w@jChBlG\\tC{CrEPmEdj@yi@nhDaHtQZvH}C_@yQt\\_@xFr@`PaBxLwDnF}IC}@tDfFh_@dLlZhKvQrFvYrCkAz@tFtHwHnGwC`MvYrGrGxGdDwHpSaB`OiDtGiBjUyOtDw@~FyBpAPhEdElRzDlCb[b@vKjJvLjF|Tb]tElXtChCvDf@MnHqBjIlCfQEz^uB~G{FhDw@dGrCpSjHxK~ATe@bUh@nHKpZn@xGcFqCqG|c@sTx}@kCvIyD`C~AzLfKbYwI`]kE`t@yFtJPpe@y@|Bh@dCh]|\\tIzg@nAlVhIde@IlO[uBhBkAvEQp@hAxDyAv@x@gFtIhErKwAj@A~EqB~BbCbZbFnO","lunch":["Vieille ville de Winterthur",47.53387,8.7142,"Pause café-déjeuner dans la vieille ville. (à ~4 km de la route)"],"camp":null,"note":"Pas de camping vérifié à Brugg : cherche un camping sur l'Aar ou l'auberge de jeunesse de Brugg (ouverte mars–octobre)."},{"n":15,"a":"Brugg","b":"Lyss","km":105,"up":500,"h":0,"t":"Aar & Soleure","x":"Olten, Soleure et ses ruelles baroques, plaine du Seeland jusqu'à Lyss.","p":"y_y`Hwf`q@dAzHwEhIzBjKh@UfInJjCpIbCy@`EkL~LFpCdHhApNdRrQ`ChWhNdc@jQby@pPzUnNdKtWtAjPiCdRgKZkHrE_BReAhOaAfAaI|CmAzETzAxJ@`KfRwElHB`IjClZnQbIp@p\\eE`YVpS}AxH`C|JnLjCbKhC~[hArYNrf@|Ov{BDjBoB`BfBlh@kB`g@Wtg@|@ruAf@xOzAhHzEtJ`AhIwBnj@hA`NpMlf@nL~WzDr^rAnEn[x[pKjH|FfJ|@dI|DlNdAjQg@bLn@|Ib@lAtEQxApr@`FvTnExGt^zYbChHlBzPlRhRxOxm@~L`Fp@tBbEyB`VlJTrA}ApJ|DpC~@bD~EnEzDnK~EsBdVzXBxU|Cf@wKd`@oIna@uF`Cp@lj@xA~EVpIjFp[dQhRzJbRtYoHvDqHjFlFiFxJwHj[cBjKHdTlBdNx@zUxE~[VxO~@v@s@tHx@v@tFmG|JeCtEhXe@jPpIlQpDdMb@lS~CtQyBtHg@~X|JL`g@oPvJW~}@pZ~JzKbB|EbMfLtXvA`ArJbV`^fF|Nt@tGbKlO\\ba@tAP?`HhGd@s@`Rl@pGjSzYh@Q~EzKh@bCsAjIbDzH`IlKg@bD`WhIpCkNhOzVx@kCpCm@fElIf_Aro@dt@tXtw@lu@dDrHf@zHdDnFbIz^bDvEzF^dAnJbBdEl@rZ~AnMhAj]ErFsFxHWjBpI`b@pCnUtPpe@pGvKzBzMfZl^pNzBbMbJnOn]jLd`@b@tCiApH_PrJuDcByAj@{CdScIvIaCbNhBfKu@fKtAnBhHxf@dDdh@zBjEfQfQdL~FrEzHfKbY~EfT^jRrFnn@vBfJlIlPiAjM_Shz@oA~_@uDlTZxXyAfOx@u@rBn@{ClTm@hVcAnD`HtCe@~JtBpM|B|k@sAvA[pR|BNrB|I{@xCtJlOiCtElCjApCtZnDpGb]tdApa@xdAGhHuE`_@j@hJ|D`Lp@lOc@hRiKbb@c@rMj@|FhDtNnG|M@p]bGfa@OpCtBdDbNbe@~Jrh@t_@dpArJ|UkCfEyBrNnFtH|@zEDhe@lCt_@|ChIvDbA`CnFpH`C~G`Gb@zAqCtF~GfMcA~AfBtEwCdDzBdLnDrmAnFdQt@CCrJqB|KgDrGs_@nf@sCvHoGr@|@xK[lQzC`RdFpLxElEy@xJkDjIx`@pgD_GbDfdAjqIpk@a\\t@d@~~@oOd]_QvJa@bEjKwAtWn@nQpKdf@hBfTpFkBtSjOrr@jPrR`RlR`]fBhI_@bQiE~LmF`HzCfIf@pHpGl@`DqCVzCzCzErB~KxJ~mAhCJb@dJxEtG|A`@vKmAvPnBrHjDXnCyBlF|B`Cb@`KlEtMjK~KxCcC`DRhJxP|JyPlMzR~AjWtJld@jS|KnAlSvXIvK_QtIyVfN`QdFlOjNlElFrFlh@lX|a@r`@rJhMdA|EzNj@|GiG`HeCXn@","lunch":["Quais de l'Aar à Soleure",47.20578,7.53898,"Vieille ville baroque, quais le long de l'Aar."],"camp":["Seeland Camp (Meinisberg)",47.183,7.316,"À ~15 km de Lyss · ouvert 1er avril–30 septembre · petite tente dès 7 CHF · vue sur les Alpes · position approximative.",0],"note":null},{"n":16,"a":"Lyss","b":"Vallorbe","km":95,"up":700,"h":0,"t":"Lac de Neuchâtel & Jura","x":"Aarberg, lac de Neuchâtel, Estavayer-le-Lac, Yverdon, Orbe, Vallorbe.","p":"{pi~Gc|qk@jPnW`B~@bDzJpFiD|DvF|D`OIdCeC`Ghe@xDdGmEvIx@fOzJxPvS|MzEhFxFx@nBd@fO~QdMnFzOtDjFbBq@dGhLjNnk@Ttx@tFmH~CbJ~Zxi@np@lzAhBdFwBvEbHfJbAwCjZbg@OdEqEvLpKbPlmBbiBz@uBfaAdmBxTrj@dS`v@fJbl@j_@vtCnMoFny@hfBgB|C|Mlv@hInNlQxLtNpWpCvOdMv`@pHtJq@tLj@|FzL~WpGdVbEjVlCpFvFt_@xNrb@t@jUpI`YbMlTrG`RtLxPrIj[dIhPzD`E~EvAfCrHdGtHlEtLnJ`NzGnWnQ|`@tJxX~DxFWfEjBnJvRfd@nW|v@tHwOhu@htAAvBxC~Fj{@lZzCdCpIfX`Sf`@rIrYzMlMtBbGxGbIrCbJvBtd@lFrUrC`G~MrMlBvHjAzTrCzCK|FpAhJy@fNlC|^`S}HjFtt@xEm@fRloAtD|AjAld@x_@|fCxGnJ`AMnE|JjSrgBzTvz@KnScOlQe@tEaFfJnFzI}AjGuCtEzHtHnNzp@bTtv@vVdw@rJ`d@tAn@tB}A~AhBfPvFdF`GpTlf@fe@|t@{@nA^~Aj^tm@l@pNlHtAlIxOd@dGxD|Gz@|FbP|Lbo@nkA`JlUDhOaAzNmKvl@x@hAsH~^zAfADxHySrh@cAfHrA|LrOxNhDd@zTtcCjDlT|L|d@pXtr@lPv|@dUby@xc@fgAkU`}@p[xT@vB~MfEjMbRtKpc@}@tHpJrNkRje@~_@lc@za@dy@f{@lfCkY~b@lKjRySnz@lb@jn@bS|]n`@bh@eLlXkFzVmEfHeNht@PdHiApHBzKuB~HwElHHnFwA`I~Bi@jBkCp@^aBzIzJpf@a@xPjDtJjFbGnAhE~@bVO`J{@Nq@hIrLlL|K|EeDpBM`CtM|@b[lPxNzNA|HxBlEdAxQsCjFg@pExB`L|FxNx@vNsBrIcJrQsElHcE`BcEn_@mDtKi@dGn@|GvM|l@nHhPlFfGtAjFR~MiH`D]~AnE`KdCtMBt\\lAfB~Gp@tFtDdLnXTdN}Dp\\jE~X}BrL{CtCEhAhFtDtE~LfB~K`KjHhEbIk@bOcDhKwEpF_BjGbAm@vBnEdGj@~DbIdE`@~JxQrGfGfEhArFiBdBvAtBxElDtQlHvIrFbb@l@tAt@_B","lunch":["Estavayer-le-Lac",46.84962,6.84926,"Lac de Neuchâtel, château et vieille ville fortifiée."],"camp":["Camping de Vallorbe",46.706,6.377,"Pré sous Ville · site calme près des grottes de Vallorbe · buvette et piscine · position approximative.",0],"note":null},{"n":17,"a":"Vallorbe","b":"Bellefontaine","km":51,"up":450,"h":0,"t":"Vallée de Joux & Haut-Jura","x":"Montée dans le Jura vers 1000 m, lac de Joux, forêts de sapins, Bellefontaine.","p":"wmb|Go`|e@rFzWbDb_@vItW^pPtQpi@xUj`AhItGyAdX|BfKlBArFaPnHwCDqDiEaDJiBnDtCjKz@lMgH|KdGjEpElKn@tYbHfNdJxDhHbIzBbZt^`M~AdN|IlDA|C~ChG|A~CfMp@tImErXiFfIvEhGt@hKjEnGpFjQbJvSnEnFvAfJWxChCbKfD~CzNt\\tN|TxAvJzEdI|Kf@vLtLfl@jaApAg@hIvRvGjK`Eh@|HfOjRpRfWjf@hUzM|DbEnDlTvQbNzLrY`ItFfHrN|A@lx@n_AnE~NbTtWdHfMr\\lYjQvA|KkDza@tJbFlDzl@r{ApYt~@fTdWnQr`@rOzWrh@zr@ze@he@|s@~iA~\\~a@vx@dlAdiA~wAiAbBJbCfFdJnQ`W~I|G`Zj`@xBtEhAbHhJhNjVbOxDhMhGtA|FvIrGxCxDhPvH~CrD|DhAxWtBjGbA|Iv@Mt@rBpE`UsF`RzEt\\sChD{CxU_CtIGvLvAtHoBnKGpIwBxB}CjI{DpDaYwJsDdNk@|PmDjFuPpHkH~ImShLbFx@~MyCzBrFk@`DlApDShB{Av@@zC~EfGtJn@lIiE`E_FuC|FgJ`KuKxDyEJoHhDwSr@aSkAiG|@uAlAoEzNs\\xLuQbDo@q@cAp@BjAuN~H_Gp@mQqAwVnFn@xIYpJcFfKyD~D{DrUyCjBrBxCzAtMvC|DbBzGUfL`CnDc@nS`FnCnDLLlM~AjGfEh@dFsBrCrIfJOp@z@","lunch":["Lac de Joux (Le Pont)",46.67109,6.32666,"Lac d'altitude entouré de forêts de sapins, idéal pour un pique-nique."],"camp":["Camping municipal du Champs de Mars",46.58,5.96,"Saint-Laurent-en-Grandvaux (Jura) · noté 9,1/10 sur ACSI (76 avis) · position approximative.",0],"note":null},{"n":18,"a":"Bellefontaine","b":"Pont-d'Ain","km":100,"up":450,"h":0,"t":"Haut-Jura & vallée de l'Ain","x":"Descente vers Saint-Claude, Oyonnax, vallée de l'Ain.","p":"sx}zGkjqc@`CnQvBbAxDrKzCpJRvFfB]lBpDtO|IfC~QgAbPTzCnDlHjE`BtElPhAxOxCxHjKdKhAfL`HxApDuApDvAtIgC`NiMpG^fBzBvKz]bLtDdDlD|HhXRfHgU`\\uHlDkCdI`BfJaBbRjF~IrMx\\dHzJhHbRbEhFdImAtEfIpEfPdJ`RrFpWbHbNdD~LbNj]`E|Fb@nEtS~YnL|HjIlW`CxBhP`ZMz@zI|LhD`K|F|A`LzKlAvE|AhW|A~Hz`@hZzM|G~LvKzSxXrMfFpJdKjC~NfDxDpWrFfGo@fInHS`A|B`DfPrFbHbSGxGlDpJHlEhPtMjCjKfEvIfCbBhQlYfMiCzBd@dUnZ~LdGvFlFvMhSl@rBIzFlLdNnAhGbCpD}H~FoDjLwHzA~C@hGjD~C_ExCOL_Dr@[zHzDrZ|WvMdEpEpDfFj@vPjHtA[pAxArF}DnB?tKjEdBtEpI~HhLz@tDbDxDoFnIyDrAfDwAjGpAtSxAhJ~C`DbH}@rYs[jYaBhOaGbH]hCdAfMfQdO~n@zGdQp@zHdMpXvGnW@nEsCtR\\`VmElHoBdRhA`QlL~JrHxMvRlg@hAzKoAdKkJ|Tuh@reAgJfH{BdIyDvEwFpCqN|AaE`FkBlFc@pI`Cnb@~L`_@~Jtl@}K~H}EtAtB`NiAtJzNrUt[r^`^l[dFzBnMt@rDlB`C[xEfCjAzElb@zXlJrAfMbHvEM~BbBpLrBbBu@fAkFrDfAbGyEzPy@nIv@vGqBfHnCxCuBjJxM|NnKW~AqHXjEzL}GxCqFdF{@jBe@pKgGfIrCnPxPdVsFxMuI|JeC`HEtOqArLFxPgBzG}GxGgIPwDgAwRcPcZmFy[nEuCnLHbFjPj[tKrGpR|CpDlCpFlJtF~Q]~OtEjl@pCrEzI`EfHdQjf@l^`LhExGn@p[lPtWnXdl@vU~SnRvMrYrExPdDfFhAxa@mDdWcAbQ|Df]tG`RbDdCzHlNnArIfU`TdS~IfJtHpJ~PvHlDzEpNjWfb@`ExRD`HvCrIl@jM|BbFhB~NnI|XfA|JaAzJhEpLt@j]tAtE~GbFfNjCdKDpPnFla@v_@|\\rT~G`AnEcGzB?pCgDhCtg@rVli@dTpPjTrTjXbJpMbIjUh\\pRpP|OxFvFtHvElIrCxMz@tKApM_AtHeEdKmOrJcDbH_BzSr@jMfF~AzMn@~Do@zDsCpEqK?mGhFmXzAcTrE{JlFiC|GY`_@vFbG?hi@_QxGr@jKbPpN~]lK|KrCl@vIa@vAgAtAgEHyMbHwMhUk@lDxIfUvSrRdBdHpFbLnNlUvQfVpKlKbC~HjFhA[^dCxK`KjDrMrFxAt`@n[tLzD`S`NlIVxFyAfDkFq@uGxKYlCiAlBkDtDbBtHV`OfGpDpCxClJnDbC~EfUGbFoCxG[hEZpMrBdD`Eh@zI_FnIq@bKbCbRj@rWnOnE~GxA|JtDvGjUtXhFbLtDrCdElBnPPhOlInW_@wEj\\xWdIrAv@vAdEL`CqC`RbDlIhCxb@rCfQj@db@~@`KbFfAjIlFpMe@rZhBn`Brr@jCnDlKlb@b@vt@pA~LdFtRxMfMbIxWjBfZyChi@","lunch":["Oyonnax",46.29522,5.59656,"Haut-Bugey : boulangeries et restaurants avant la descente. (à ~6 km de la route)"],"camp":["Camping de l'Oiselon (Pont-d'Ain)",46.046392,5.345413,"Au bord de l'Ain · ouvert mi-mars–début octobre · 180 emplacements, 175 nus.",1],"note":null},{"n":19,"a":"Pont-d'Ain","b":"Lyon","km":56,"up":200,"h":0,"t":"Dombes & retour à Lyon","x":"Dernière étape par la Bresse et la Dombes, retour sur Lyon.","p":"obaxGc_p_@LxFlBbIj@r^hA`BtGzB~EdKxf@bL|^pe@pVnKjTbRjGzAtFcApDb@~ZnM`StFjDzCpAzErHjFfl@lOzFtNjDlQ|i@xv@RvBrBbAfcBjaCxGfBjpAhw@p}@`b@zx@yFtZfQfCu@lHcJ`IsBlaBrv@xFnJfBbMuApKmEvO`@jGi@pHnjAbbArUrx@lI~R~ApYjH{JvLx^rE_CxFbHjFxL|Iw@r]~Ezm@z\\xg@xPxV~Dlb@[p^|x@lFlCf@pGhJrPba@zc@r`@nZxAjNw@xOZnUeDrMSpZqBz`@Gzo@n@fHa@fA`ErTh@tw@rDbDhWi@fCrAlL|ZxEzIfH~HpRt^dEjMLfExBlBjAdFfP}GxE{GvD}MlH{HnBWvVpQbG|U|JxLd@dEzGjFb@jGtL_F~GhFfA`GrPNw@`@lAjc@pAtF~Ath@lG|XpBzXtKzh@tFvi@tF`RzHl_@bLxTpNxOfDdJdDh[~BrGx\\~[bBV@qExBlGxSvXpB``@pNtr@lDbe@xD~SbLxWeHhQqBtKcD|DyBf@?jCnDrBzHvMz@~JUz[~GxPL`WoEvb@BdKt^xpAzAfQ}BxZTzD|X`z@VzM|Dtd@nEhWvA`Ql@jj@yIhc@pAXfFlH|BpKtClCaLdfAnYdA","lunch":["Pérouges (option, ~3 km de la route)",45.89755,5.19152,"Cité médiévale de Pérouges, option déjeuner."],"camp":null,"note":"Arrivée à Lyon : fin du voyage."}];
+const PAS="oduyGw|~o@nlA{Tzr@co@jgBg^noB~p@~_AfOvmA{^noBkz@vcAod@r`AsSjH{lCoKg{CnKg{CnA_oA~HojBnFcaBwe@kxA";
+function dec(s){let i=0,la=0,ln=0,o=[];while(i<s.length){let b,sh=0,r=0;do{b=s.charCodeAt(i++)-63;r|=(b&31)<<sh;sh+=5}while(b>=32);la+=(r&1)?~(r>>1):r>>1;sh=r=0;do{b=s.charCodeAt(i++)-63;r|=(b&31)<<sh;sh+=5}while(b>=32);ln+=(r&1)?~(r>>1):r>>1;o.push([la/1e5,ln/1e5])}return o}
+const col=d=>d.r?"#37c8a4":d.h?"#ff5a3d":"#ffb03d";
+
+/* ====== À MODIFIER : tes liens (laisse '' tant que tu ne les as pas) ====== */
+const CONFIG={
+ instagram:'',            // ex: https://www.instagram.com/ton_compte
+ tiktok:'',               // ex: https://www.tiktok.com/@ton_compte
+ strava:'',               // ex: https://www.strava.com/athletes/12345
+ stripe:'',               // lien de paiement Stripe (Payment Link), ex: https://buy.stripe.com/xxxx
+ stripeTombola:'',        // lien Stripe de la tombola (ex: https://buy.stripe.com/yyyy)
+ liveEmbed:'',            // optionnel : adresse d'une carte en direct à afficher dans « Suivez-nous »
+ adSeconds:15             // durée de la « pub » en secondes
+};
+/* ========================================================================== */
+const $=s=>document.querySelector(s);
+function toast(m){const e=$('#toast');e.textContent=m;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),4000)}
+function social(k){const u=CONFIG[k];if(u)window.open(u,'_blank','noopener');else toast('Ce lien sera ajouté très bientôt.')}
+document.querySelectorAll('[data-soc]').forEach(b=>b.onclick=()=>social(b.dataset.soc));
+const VIEWS={home:'Accueil',route:'Le parcours',about:'À propos',shop:'Boutique',live:'Suivez-nous en direct'};
+let inited=false;
+let firstShow=true,lastV='';const WV=['r','l','u','d','i','k','b','h','m','c','z','x'];
+function show(v){
+ if(firstShow||(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)){firstShow=false;return doShow(v)}
+ const w=$('#wipe');clearTimeout(show.t);
+ let x;do{x=WV[Math.floor(Math.random()*WV.length)]}while(x===lastV);lastV=x;
+ w.className='';w.dataset.v=x;void w.offsetWidth;w.className='in';
+ show.t=setTimeout(()=>{doShow(v);w.className='out';show.t=setTimeout(()=>{w.className=''},420)},330)}
+let curV='home';
+function applyTomb(v){const tc=document.body.classList.contains('tc');$('#tbar').hidden=(v==='shop')||(v==='home'&&!tc);$('#featrow').hidden=!(v==='home'&&!tc);$('#tclose').textContent=tc?'▾':'✕';$('#tclose').setAttribute('aria-label',tc?'Agrandir l\'onglet tombola':'Réduire l\'onglet tombola')}
+function toggleTomb(){document.body.classList.toggle('tc');try{sessionStorage.setItem('tc',document.body.classList.contains('tc')?'1':'')}catch(e){}applyTomb(curV)}
+try{if(sessionStorage.getItem('tc'))document.body.classList.add('tc')}catch(e){}
+function doShow(v){
+ if(!VIEWS[v])v='home';
+ document.querySelectorAll('.view').forEach(e=>e.hidden=e.id!=='v-'+v);
+ setNav(v);$('#back').hidden=v==='home';
+ curV=v;applyTomb(v);
+ document.title=(v==='home'?'':VIEWS[v]+' · ')+'Grande Boucle Alpine';
+ window.scrollTo(0,0);
+ if(v==='route'){if(!inited){inited=true;initMap()}else setTimeout(()=>window.__map.invalidateSize(),50)}
+ if(v==='live'&&CONFIG.liveEmbed&&!$('#liveframe').src)$('#liveframe').src=CONFIG.liveEmbed;
+}
+function go(v){if(location.hash!=='#'+v)location.hash=v;else show(v)}
+window.addEventListener('hashchange',()=>show(location.hash.slice(1)));
+const NAVL={home:'🚲 Accueil',route:'⛰️ Le parcours',about:'👥 À propos',shop:'🛒 Boutique',live:'📡 En direct'};
+function setNav(v){$('#ddlabel').textContent=NAVL[v]||NAVL.home;document.querySelectorAll('#ddlist button').forEach(b=>b.setAttribute('aria-selected',b.dataset.v===v))}
+function ddClose(){$('#ddlist').hidden=true;$('#ddbtn').setAttribute('aria-expanded','false')}
+$('#ddbtn').onclick=e=>{e.stopPropagation();const o=$('#ddlist').hidden;$('#ddlist').hidden=!o;$('#ddbtn').setAttribute('aria-expanded',String(o))};
+document.querySelectorAll('#ddlist button').forEach(b=>b.onclick=()=>{ddClose();if(b.dataset.v==='don')openDon();else go(b.dataset.v)});
+document.addEventListener('click',e=>{if(!e.target.closest('.dd'))ddClose()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')ddClose()});
+function setTheme(th,manual){document.documentElement.dataset.theme=th;if(manual){try{sessionStorage.setItem('theme',th)}catch(e){}}
+ $('#ti').textContent=th==='dark'?'☀️':'🌙';$('#tl').textContent=th==='dark'?'Mode clair':'Mode sombre';
+ const m=document.querySelector('meta[name=theme-color]');if(m)m.content=th==='dark'?'#0b0d10':'#ffffff'}
+$('#theme').onclick=()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark',true);
+setInterval(()=>{let m=null;try{m=sessionStorage.getItem('theme')}catch(e){}if(!m){const a=window.parisTheme();if(a!==document.documentElement.dataset.theme)setTheme(a)}},60000);
+setTheme(document.documentElement.dataset.theme||'dark');
+$('#back').onclick=()=>{if(history.length>1)history.back();else go('home')};
+document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
+$('#tclose').onclick=toggleTomb;$('#fclose').onclick=toggleTomb;
+document.querySelectorAll('[data-tk]').forEach(b=>b.onclick=()=>{if(CONFIG.stripeTombola)window.open(CONFIG.stripeTombola,'_blank','noopener');else toast('La tombola ouvrira très bientôt. Merci !')});
+/* --- dons --- */
+function openDon(){$('#don').hidden=false;$('#don1').hidden=false;$('#don2').hidden=true;$('#don3').hidden=true;$('#donclose').focus()}
+function closeDon(){$('#don').hidden=true;clearInterval(closeDon.t)}
+document.querySelectorAll('.donbtn').forEach(b=>b.onclick=openDon);
+$('#donclose').onclick=closeDon;$('#don').onclick=e=>{if(e.target.id==='don')closeDon()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDon()});
+$('#donback').onclick=()=>{$('#don1').hidden=false;$('#don2').hidden=true;$('#don3').hidden=true;clearInterval(closeDon.t)};
+$('#donback2').onclick=$('#donback').onclick;
+$('#watch').onclick=()=>{
+ $('#don1').hidden=true;$('#don2').hidden=false;let s=CONFIG.adSeconds;const c=$('#count'),ok=$('#adok');ok.hidden=true;c.textContent=s;
+ closeDon.t=setInterval(()=>{s--;c.textContent=Math.max(s,0);if(s<=0){clearInterval(closeDon.t);ok.hidden=false}},1000)};
+$('#adok').onclick=()=>{toast('Merci beaucoup pour votre soutien ! 💛');closeDon()};
+$('#pay').onclick=()=>{$('#don1').hidden=true;$('#don3').hidden=false};
+document.querySelectorAll('[data-amt]').forEach(b=>b.onclick=()=>{
+ if(CONFIG.stripe){window.open(CONFIG.stripe,'_blank','noopener')}else toast('Le paiement sécurisé sera disponible très bientôt.')});
+
+function initMap(){
+const map=L.map('map');window.__map=map;map.setView([46.5,7.5],6);
+function chain(urls,o){const l=L.tileLayer(urls[0],o);let i=0,ok=0,er=0;
+ l.on('tileload',()=>{ok++});
+ l.on('tileerror',()=>{er++;if(!ok&&er>=4&&i<urls.length-1){i++;er=0;l.setUrl(urls[i]);}});return l;}
+const sat=chain(['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}','https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}','https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{y}/{x}.jpg'],{attribution:'Esri / EOX Sentinel-2',maxZoom:17});
+const roads=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}',{maxZoom:18,opacity:.9});
+const places=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:18});
+const topo=chain(['https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}','https://tile.opentopomap.org/{z}/{x}/{y}.png','https://a.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png'],{attribution:'Esri / OpenTopoMap / CyclOSM, © OSM',maxZoom:17});
+const osm=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19});
+const gL=L.layerGroup(),gC=L.layerGroup();
+sat.addTo(map);roads.addTo(map);places.addTo(map);gC.addTo(map);gL.addTo(map);
+L.control.layers({"🛰️ Satellite":sat,"⛰️ Relief / Topo (courbes de niveau)":topo,"🗺️ Carte routière":osm},{"⛺ Campings / bivouacs":gC,"🍴 Pauses repas":gL,"Routes (sur satellite)":roads,"Noms de lieux (sur satellite)":places},{collapsed:innerWidth<700}).addTo(map);
+L.control.scale().addTo(map);
+const icon=(t,c)=>L.divIcon({className:'',html:`<div class="num ${c||''}">${t}</div>`,iconSize:[28,28],iconAnchor:[14,14],popupAnchor:[0,-12]});
+const eic=(e,c)=>L.divIcon({className:'',html:`<div class="em ${c}">${e}</div>`,iconSize:[26,26],iconAnchor:[13,13],popupAnchor:[0,-12]});
+const lines=[],all=[];
+D.forEach(d=>{d.c=d.p?dec(d.p):[];});
+L.marker(D[0].c[0],{icon:icon("▶","s")}).addTo(map).bindPopup("<b>Départ / Arrivée</b><br>Lyon");
+D.forEach((d,i)=>{
+ let e;
+ if(d.c.length){
+  const fg=L.featureGroup([L.polyline(d.c,{color:'#000',weight:7,opacity:.4}),L.polyline(d.c,{color:col(d),weight:4,opacity:.95})]).addTo(map);
+  fg.on('click',()=>sel(d.n));lines[d.n-1]=fg;all.push(...d.c);e=d.c[d.c.length-1];
+ }else e=D[i-1].e;
+ d.e=e;
+ L.marker(e,{icon:icon(d.r?'R':d.n,d.r?'r':'')}).addTo(map)
+  .bindPopup(`<b>Jour ${d.n} · ${d.b}</b><br>${d.r?"Repos":d.km+" km · +"+d.up+" m"}<br>${d.t}`).on('click',()=>sel(d.n,1));
+ if(d.lunch)L.marker([d.lunch[1],d.lunch[2]],{icon:eic('🍴','l')}).addTo(gL).bindPopup(`<b>🍴 Pause repas · J${d.n}</b><br>${d.lunch[0]}<br><small>${d.lunch[3]}</small>`);
+ if(d.camp)L.marker([d.camp[1],d.camp[2]],{icon:eic('⛺',d.camp[4]?'c':'q')}).addTo(gC).bindPopup(`<b>⛺ ${d.camp[0]}</b><br>Nuit J${d.n}<br><small>${d.camp[3]}</small>`);
+});
+L.polyline(dec(PAS),{color:'#ff2d2d',weight:5,dashArray:'6 8'}).addTo(map).bindPopup("Section du col du Simplon reconstituée à la main (le GPX passait par le tunnel ferroviaire)");
+map.fitBounds(L.latLngBounds(all).pad(.05));
+const list=document.getElementById('list');
+D.forEach(d=>{
+ const e=document.createElement('div');e.className='day';e.id='d'+d.n;e.style.setProperty('--c',col(d));
+ e.innerHTML=`<h3><span>J${d.n} · ${d.r?"Repos à "+d.b:d.a+" → "+d.b}</span><em>${d.t}</em></h3>
+ <div class="meta">${d.r?'<span class="tag rest">Jour off</span>':`<span class="tag">${d.km} km</span><span class="tag">+${d.up} m</span>${d.h?'<span class="tag hard">Montagne ≤ 60 km</span>':''}`}</div><p>${d.x}</p>
+ <p class="l">🍴 ${d.lunch[0]}</p><p class="c">⛺ ${d.camp?d.camp[0]:"Camping à trouver"}</p>${d.note?`<p class="n">${d.note}</p>`:''}`;
+ e.onclick=()=>sel(d.n);list.appendChild(e);
+});
+function sel(n,sc){
+ document.querySelectorAll('.day').forEach(e=>e.classList.remove('on'));
+ const e=document.getElementById('d'+n);e.classList.add('on');
+ lines.forEach((f,i)=>f&&f.eachLayer(l=>l.options.color!=='#000'&&l.setStyle({weight:i+1==n?7:3,opacity:i+1==n?1:.55})));
+ const f=lines[n-1];if(f)map.fitBounds(f.getBounds().pad(.25));else map.setView(D[n-1].e,12);
+ if(sc||innerWidth>850)e.scrollIntoView({behavior:'smooth',block:'nearest'});else $('#map').scrollIntoView({behavior:'smooth',block:'start'});
+}
+const km=D.reduce((s,d)=>s+d.km,0),up=D.reduce((s,d)=>s+d.up,0);
+document.getElementById('stats').innerHTML=[["19","jours (1 repos)"],["≈ "+km,"km"],["≈ "+(up/1000).toFixed(1)+"k m","dénivelé +"],["6","pays"]].map(s=>`<div class="stat"><b>${s[0]}</b><small>${s[1]}</small></div>`).join("");
+document.getElementById('gpx').onclick=()=>{
+ const tr=D.filter(d=>d.c.length).map(d=>`<trk><name>J${d.n} ${d.a}-${d.b}</name><trkseg>${d.c.map(p=>`<trkpt lat="${p[0].toFixed(5)}" lon="${p[1].toFixed(5)}"/>`).join('')}</trkseg></trk>`).join('');
+ const wp=D.flatMap(d=>[d.camp&&`<wpt lat="${d.camp[1]}" lon="${d.camp[2]}"><name>Camp J${d.n} ${d.camp[0].replace(/&/g,'et')}</name></wpt>`,`<wpt lat="${d.lunch[1]}" lon="${d.lunch[2]}"><name>Repas J${d.n} ${d.lunch[0].replace(/&/g,'et')}</name></wpt>`]).filter(Boolean).join('');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([`<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="boucle-alpine" xmlns="http://www.topografix.com/GPX/1/1">${wp}${tr}</gpx>`],{type:'application/gpx+xml'}));
+ a.download='boucle-alpine-etapes.gpx';a.click();
+};
+
+}
+show(location.hash.slice(1)||'home');
+</script></body></html>
