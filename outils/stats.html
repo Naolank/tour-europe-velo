@@ -1,0 +1,12 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Statistiques partenaires</title>
+<style>body{font:16px system-ui,sans-serif;max-width:720px;margin:0 auto;padding:16px;background:#0b0d10;color:#eee}input,button{font:inherit;padding:10px;border-radius:8px;border:1px solid #444;background:#1a1d22;color:#eee}button{background:#1b6ef3;border-color:#1b6ef3;cursor:pointer}table{width:100%;border-collapse:collapse;margin-top:14px}td,th{padding:8px;border-bottom:1px solid #333;text-align:left}td:last-child,th:last-child{text-align:right}#e{color:#f66}</style></head><body>
+<h1>Statistiques anonymes</h1><p>Colle l’adresse du Worker et ta clé STATS_KEY. Rien n’est enregistré par cette page.</p>
+<p><input id="u" placeholder="https://xxx.workers.dev" size="34"> <input id="k" type="password" placeholder="STATS_KEY"> <button id="go">Afficher</button></p><div id="e"></div><div id="o"></div>
+<script>
+const L=k=>k==='vis'?'Visites':k==='spn'?'Tours de roue':/^ad/.test(k)?'Pub partenaire n°'+(+k.slice(2)+1)+' vue':/^clk/.test(k)?'Pub partenaire n°'+(+k.slice(3)+1)+' cliquée':k;
+document.getElementById('go').onclick=async()=>{const e=document.getElementById('e'),o=document.getElementById('o');e.textContent='';o.textContent='';
+try{const u=document.getElementById('u').value.trim().replace(/\/$/,'');const r=await fetch(u+'/?act=stats&key='+encodeURIComponent(document.getElementById('k').value));const j=await r.json();if(!j.ok)throw 0;
+let h='<table><tr><th>Mesure</th><th>7 derniers jours</th><th>Total</th></tr>';const lim=Date.now()-7*864e5;
+for(const k of Object.keys(j.stats).sort()){let t=0,w=0;for(const[d,v]of Object.entries(j.stats[k])){t+=v;if(Date.parse(d)>=lim)w+=v}h+='<tr><td>'+L(k)+'</td><td>'+w+'</td><td>'+t+'</td></tr>'}
+o.innerHTML=h+'</table>'}catch(x){e.textContent='Accès refusé ou Worker injoignable.'}};
+</script></body></html>
