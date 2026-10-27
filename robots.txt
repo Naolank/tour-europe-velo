@@ -1,7 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /admin.js
-Disallow: /site-edits.json
-Disallow: /site-images.json
-
-Sitemap: https://naolank.github.io/tour-europe-velo/sitemap.xml
